@@ -49,6 +49,7 @@ enum Expr_kind {
 };
 
 class Cons;
+class Procedure;
 
 class Expr {
  public:
@@ -57,22 +58,22 @@ class Expr {
   explicit Expr(Cons* cons) : m_kind(Expr_kind::cons), m_cons(cons){};
   explicit Expr(Expr_kind kind, Atom atom) : m_kind(kind), m_atom(atom){};
   explicit Expr(Expr_kind kind, Cons* cons) : m_kind(kind), m_cons(cons){};
-  explicit Expr(Expr (*func)(std::vector<Expr>))
-      : m_func(func), m_kind(Expr_kind::procedure){};
+  explicit Expr(Procedure* proc) : m_kind(Expr_kind::procedure), m_proc(proc){};
   explicit Expr(Expr_kind kind) : m_kind(kind){};
 
   Expr_kind kind() const { return m_kind; }
   Atom atom() const { return m_atom; }
   Cons* cons() const { return m_cons; }
+  Procedure* proc() const { return m_proc; }
 
   static Expr nil() { return Expr(Expr_kind::nil); }
   static Expr err() { return Expr(Expr_kind::err); }
-  Expr (*m_func)(std::vector<Expr>);
 
  private:
   Expr_kind m_kind;
   Atom m_atom;
   Cons* m_cons;
+  Procedure* m_proc;
 };
 
 class Cons {
@@ -88,4 +89,50 @@ class Cons {
 
   Expr car;
   Expr cdr;
+};
+
+struct symbol_value {
+  Atom symbol;
+  Expr value;
+};
+
+enum class procedure_kind {
+  native,
+  lambda,
+};
+
+typedef Expr (*NativeFn)(std::vector<Expr>);
+
+class Procedure {
+ public:
+  Procedure(std::vector<Expr> params, Expr body)
+      : m_kind(procedure_kind::lambda), m_params(params), m_body(body) {
+    for (const Expr& exp : params) m_env.emplace_back(exp.atom(), Expr::nil());
+  };
+
+  Procedure(NativeFn native_fn)
+      : m_kind(procedure_kind::native), m_native_fn(native_fn){};
+
+  static Procedure* proc(std::vector<Expr> params, Expr body) {
+    Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
+    *proc = Procedure(params, body);
+    return proc;
+  }
+
+  static Procedure* proc(NativeFn native_fn) {
+    Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
+    *proc = Procedure(native_fn);
+    return proc;
+  }
+
+  procedure_kind kind() const { return m_kind; }
+  NativeFn native_fn() const { return m_native_fn; }
+
+ private:
+  procedure_kind m_kind;
+  std::vector<Expr> m_params;
+  Expr m_body;
+  std::vector<Expr> m_args;
+  NativeFn m_native_fn;
+  std::vector<symbol_value> m_env;
 };

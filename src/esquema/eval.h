@@ -1,13 +1,9 @@
 #pragma once
 
+#include "expr.h"
 #include "parse.h"
 #include "string_view.h"
 #include <vector>
-
-struct symbol_value {
-  Atom symbol;
-  Expr value;
-};
 
 class evaluator {
  public:

@@ -54,7 +54,9 @@ std::vector<Expr> evaluator::flatten(Expr exp) {
 
 Expr evaluator::invoke(Expr func_exp, std::vector<Expr> args) {
   if (func_exp.kind() == Expr_kind::procedure) {
-    return func_exp.m_func(args);
+    if (func_exp.proc()->kind() == procedure_kind::native) {
+      return func_exp.proc()->native_fn()(args);
+    }
   }
   return Expr::err();
 }
@@ -106,9 +108,9 @@ void evaluator::extend_env(Atom symbol, Expr value) {
 }
 
 void evaluator::populate_env() {
-  this->extend_env(Atom(token_t::symbol, "+"_sv), Expr(NAT_plus));
-  this->extend_env(Atom(token_t::symbol, "-"_sv), Expr(NAT_minus));
-  this->extend_env(Atom(token_t::symbol, "*"_sv), Expr(NAT_times));
-  this->extend_env(Atom(token_t::symbol, "/"_sv), Expr(NAT_div));
-  this->extend_env(Atom(token_t::symbol, "%"_sv), Expr(NAT_mod));
+  this->extend_env(Atom(token_t::symbol, "+"_sv), Expr(Procedure::proc(NAT_plus)));
+  this->extend_env(Atom(token_t::symbol, "-"_sv), Expr(Procedure::proc(NAT_minus)));
+  this->extend_env(Atom(token_t::symbol, "*"_sv), Expr(Procedure::proc(NAT_times)));
+  this->extend_env(Atom(token_t::symbol, "/"_sv), Expr(Procedure::proc(NAT_div)));
+  this->extend_env(Atom(token_t::symbol, "%"_sv), Expr(Procedure::proc(NAT_mod)));
 }
