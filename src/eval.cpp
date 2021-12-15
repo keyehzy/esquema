@@ -34,7 +34,7 @@ Expr evaluator::eval(Expr exp) {
       case Expr_kind::set:
         return this->update(CADR(exp), eval(CADDR(exp)));
       default:
-        return this->invoke(eval(CAR(exp)), this->flatten(CDR(exp)));
+        return this->invoke(eval(CAR(exp)), this->eval_list(CDR(exp)));
       }
     }
   default:
@@ -42,7 +42,7 @@ Expr evaluator::eval(Expr exp) {
   }
 }
 
-std::vector<Expr> evaluator::flatten(Expr exp) {
+std::vector<Expr> evaluator::eval_list(Expr exp) {
   Expr head = exp;
   std::vector<Expr> list;
   while (head.kind() == Expr_kind::cons) {
@@ -108,9 +108,14 @@ void evaluator::extend_env(Atom symbol, Expr value) {
 }
 
 void evaluator::populate_env() {
-  this->extend_env(Atom(token_t::symbol, "+"_sv), Expr(Procedure::proc(NAT_plus)));
-  this->extend_env(Atom(token_t::symbol, "-"_sv), Expr(Procedure::proc(NAT_minus)));
-  this->extend_env(Atom(token_t::symbol, "*"_sv), Expr(Procedure::proc(NAT_times)));
-  this->extend_env(Atom(token_t::symbol, "/"_sv), Expr(Procedure::proc(NAT_div)));
-  this->extend_env(Atom(token_t::symbol, "%"_sv), Expr(Procedure::proc(NAT_mod)));
+  this->extend_env(Atom(token_t::symbol, "+"_sv),
+                   Expr(Procedure::proc(NAT_plus)));
+  this->extend_env(Atom(token_t::symbol, "-"_sv),
+                   Expr(Procedure::proc(NAT_minus)));
+  this->extend_env(Atom(token_t::symbol, "*"_sv),
+                   Expr(Procedure::proc(NAT_times)));
+  this->extend_env(Atom(token_t::symbol, "/"_sv),
+                   Expr(Procedure::proc(NAT_div)));
+  this->extend_env(Atom(token_t::symbol, "%"_sv),
+                   Expr(Procedure::proc(NAT_mod)));
 }

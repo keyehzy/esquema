@@ -17,7 +17,7 @@ class evaluator {
   Expr update(Expr, Expr);
   Expr value() const;
   Expr invoke(Expr, std::vector<Expr>);
-  std::vector<Expr> flatten(Expr);
+  std::vector<Expr> eval_list(Expr);
 
   static Expr my_plus(Expr);
 
