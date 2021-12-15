@@ -1,13 +1,13 @@
 #pragma once
 
-#include "string_view.h"
-#include "lex.h"
 #include "expr.h"
+#include "lex.h"
+#include "string_view.h"
 
 class parser {
-public:
+ public:
   explicit parser(string_view input);
-  token& peek() { return m_lexer.peek();}
+  token& peek() { return m_lexer.peek(); }
   void skip() { m_lexer.skip(); }
   Expr parse_program();
   Expr parse_head();

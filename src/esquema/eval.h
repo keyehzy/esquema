@@ -9,10 +9,8 @@ struct symbol_value {
   Expr value;
 };
 
-typedef Expr (*FN) (std::vector<Atom>);
-
 class evaluator {
-public:
+ public:
   explicit evaluator(string_view input);
   void extend_env(Atom, Expr);
   void populate_env();
@@ -25,10 +23,9 @@ public:
   Expr invoke(Expr, std::vector<Expr>);
   std::vector<Expr> flatten(Expr);
 
-
   static Expr my_plus(Expr);
 
-private:
+ private:
   std::vector<symbol_value> m_env;
   Expr m_value;
   Expr m_original_value;

@@ -6,6 +6,4 @@
 using testing::ElementsAre;
 using testing::IsEmpty;
 
-TEST(test_ast, simple) {
-  EXPECT_TRUE(1);
-}
+TEST(test_ast, simple) { EXPECT_TRUE(1); }

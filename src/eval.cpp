@@ -1,8 +1,8 @@
 #include "esquema/eval.h"
 #include "esquema/expr.h"
+#include "esquema/native.h"
 #include "esquema/string_view.h"
 #include "esquema/token.h"
-#include "esquema/native.h"
 
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
@@ -10,45 +10,42 @@ evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_value = this->eval(m_original_value);
 };
 
-Expr evaluator::value() const {
-  return m_value;
-}
+Expr evaluator::value() const { return m_value; }
 
 Expr evaluator::eval(Expr exp) {
-  switch(exp.kind()) {
-    case Expr_kind::atom:
-      return this->eval_atom(exp);
-    case Expr_kind::cons:
-      if(CDR(exp).kind() == Expr_kind::nil) {
-        if(CAR(exp).kind() != Expr_kind::quote)
-          return eval(CAR(exp));
-      } else {
-        switch(CAR(exp).kind()) {
-          case Expr_kind::quote:
-            return CADR(exp);
-          case Expr_kind::if_:
-            if(eval(CADR(exp)).kind() != Expr_kind::false_) {
-              return eval(CADDR(exp));
-            } else {
-              return eval(CADDDR(exp));
-            }
-          case Expr_kind::begin:
-            return this->eprogn(CDR(exp));
-          case Expr_kind::set:
-            return this->update(CADR(exp), eval(CADDR(exp)));
-          default:
-            return this->invoke(eval(CAR(exp)), this->flatten(CDR(exp)));
+  switch (exp.kind()) {
+  case Expr_kind::atom:
+    return this->eval_atom(exp);
+  case Expr_kind::cons:
+    if (CDR(exp).kind() == Expr_kind::nil) {
+      if (CAR(exp).kind() != Expr_kind::quote) return eval(CAR(exp));
+    } else {
+      switch (CAR(exp).kind()) {
+      case Expr_kind::quote:
+        return CADR(exp);
+      case Expr_kind::if_:
+        if (eval(CADR(exp)).kind() != Expr_kind::false_) {
+          return eval(CADDR(exp));
+        } else {
+          return eval(CADDDR(exp));
         }
+      case Expr_kind::begin:
+        return this->eprogn(CDR(exp));
+      case Expr_kind::set:
+        return this->update(CADR(exp), eval(CADDR(exp)));
+      default:
+        return this->invoke(eval(CAR(exp)), this->flatten(CDR(exp)));
       }
-    default:
-      return exp;
+    }
+  default:
+    return exp;
   }
 }
 
 std::vector<Expr> evaluator::flatten(Expr exp) {
   Expr head = exp;
   std::vector<Expr> list;
-  while(head.kind() == Expr_kind::cons) {
+  while (head.kind() == Expr_kind::cons) {
     list.push_back(eval(CAR(head)));
     head = CDR(head);
   }
@@ -56,15 +53,15 @@ std::vector<Expr> evaluator::flatten(Expr exp) {
 }
 
 Expr evaluator::invoke(Expr func_exp, std::vector<Expr> args) {
-  if(func_exp.kind() == Expr_kind::procedure) {
+  if (func_exp.kind() == Expr_kind::procedure) {
     return func_exp.m_func(args);
   }
   return Expr::err();
 }
 
 Expr evaluator::update(Expr symbol, Expr new_val) {
-  for(auto& [key, val] : m_env) {
-    if(symbol.atom() == key) {
+  for (auto& [key, val] : m_env) {
+    if (symbol.atom() == key) {
       val = new_val;
       return new_val;
     }
@@ -74,8 +71,8 @@ Expr evaluator::update(Expr symbol, Expr new_val) {
 }
 
 Expr evaluator::eprogn(Expr exp) {
-  if(exp.kind() == Expr_kind::cons) {
-    if(CDR(exp).kind() == Expr_kind::cons) {
+  if (exp.kind() == Expr_kind::cons) {
+    if (CDR(exp).kind() == Expr_kind::cons) {
       this->eval(CAR(exp));
       return this->eprogn(CDR(exp));
     }
@@ -85,22 +82,21 @@ Expr evaluator::eprogn(Expr exp) {
 }
 
 Expr evaluator::eval_atom(Expr exp) {
-  switch(exp.atom().token_().type) {
-    case token_t::integer:
-    case token_t::string:
-    case token_t::float_:
-      return exp;
-    case token_t::symbol:
-      return this->eval_symbol(exp);
-    default:
-      return Expr::err();
+  switch (exp.atom().token_().type) {
+  case token_t::integer:
+  case token_t::string:
+  case token_t::float_:
+    return exp;
+  case token_t::symbol:
+    return this->eval_symbol(exp);
+  default:
+    return Expr::err();
   }
 }
 
 Expr evaluator::eval_symbol(Expr symbol) {
-  for(const auto& [key, val] : m_env) {
-    if(symbol.atom() == key)
-      return val;
+  for (const auto& [key, val] : m_env) {
+    if (symbol.atom() == key) return val;
   }
   return symbol;
 }

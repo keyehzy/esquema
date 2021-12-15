@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include <esquema/print.h>
+#include <gtest/gtest.h>
 
 TEST(test, level1) {
   // Testing read of numbers
@@ -9,7 +8,7 @@ TEST(test, level1) {
   { EXPECT_EQ(print_quoted("  7   "), "7"); }
   { EXPECT_EQ(print_quoted("-123"), "-123"); }
 
-    // Testing read of symbols
+  // Testing read of symbols
   { EXPECT_EQ(print_quoted("+"), "+"); }
   { EXPECT_EQ(print_quoted("abc"), "abc"); }
   { EXPECT_EQ(print_quoted("   abc   "), "abc"); }
@@ -28,15 +27,17 @@ TEST(test, level1) {
   { EXPECT_EQ(print_quoted("(nil)"), "nil"); }
   { EXPECT_EQ(print_quoted("((3 4))"), "(3 4)"); }
   { EXPECT_EQ(print_quoted("(+ 1 (+ 2 3))"), "(+ (1 (+ (2 3))))"); }
-  { EXPECT_EQ(print_quoted("  ( +   1   (+   2 3   )   )  "),
-              "(+ (1 (+ (2 3))))"); }
+  {
+    EXPECT_EQ(print_quoted("  ( +   1   (+   2 3   )   )  "),
+              "(+ (1 (+ (2 3))))");
+  }
 
   { EXPECT_EQ(print_quoted("(* 1 2)"), "(* (1 2))"); }
   { EXPECT_EQ(print_quoted("(** 1 2)"), "(** (1 2))"); }
   { EXPECT_EQ(print_quoted("(* -3 6)"), "(* (-3 6))"); }
   { EXPECT_EQ(print_quoted("(()())"), "(() ())"); }
 
-    // Testing read of nil/true/false
+  // Testing read of nil/true/false
   { EXPECT_EQ(print_quoted("nil"), "nil"); }
   { EXPECT_EQ(print_quoted("true"), "true"); }
   { EXPECT_EQ(print_quoted("false"), "false"); }
@@ -46,13 +47,14 @@ TEST(test, level1) {
   { EXPECT_EQ(print_quoted(R"(   "abc"   )"), R"("abc")"); }
   {
     EXPECT_EQ(print_quoted(R"STR("abc (with parens)")STR"),
-                 R"STR("abc (with parens)")STR");
+              R"STR("abc (with parens)")STR");
   }
   { EXPECT_EQ(print_quoted(R"("abc\"def")"), R"("abc\"def")"); }
   { EXPECT_EQ(print_quoted(R"("")"), R"("")"); }
   { EXPECT_EQ(print_quoted(R"("\\")"), R"("\\")"); }
   {
-    EXPECT_EQ(print_quoted(R"("\\\\\\\\\\\\\\\\\\")"), R"("\\\\\\\\\\\\\\\\\\")");
+    EXPECT_EQ(print_quoted(R"("\\\\\\\\\\\\\\\\\\")"),
+              R"("\\\\\\\\\\\\\\\\\\")");
   }
 
   { EXPECT_EQ(print_quoted(R"("&")"), R"("&")"); }
@@ -99,5 +101,4 @@ TEST(test, level1) {
   //   EXPECT_EQ(print_quoted(R"(,@(1 2 3))"),
   //                R"((commaat ((1 (2 3)) nil)))");
   // }
-
 }
