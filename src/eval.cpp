@@ -29,6 +29,8 @@ Expr evaluator::eval(Expr exp) {
         } else {
           return eval(CADDDR(exp));
         }
+      case Expr_kind::lambda:
+        return Expr(Procedure::proc(CADR(exp), CADDR(exp)));
       case Expr_kind::begin:
         return this->eprogn(CDR(exp));
       case Expr_kind::set:
@@ -52,10 +54,20 @@ std::vector<Expr> evaluator::eval_list(Expr exp) {
   return list;
 }
 
-Expr evaluator::invoke(Expr func_exp, std::vector<Expr> args) {
-  if (func_exp.kind() == Expr_kind::procedure) {
-    if (func_exp.proc()->kind() == procedure_kind::native) {
-      return func_exp.proc()->native_fn()(args);
+Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
+  if (fn_exp.kind() == Expr_kind::procedure) {
+    if (fn_exp.proc()->kind() == procedure_kind::native) {
+      return fn_exp.proc()->native_fn()(args);
+    } else if (fn_exp.proc()->kind() == procedure_kind::lambda) {
+      // TODO: bound checking
+      // TODO: flatten proc()->params() so that we get rid of this non-sense
+      Expr head = fn_exp.proc()->params();
+      int index = 0;
+      while (head.kind() == Expr_kind::cons) {
+        m_env.emplace_back(CAR(head).atom(), args[index++]);
+        head = CDR(head);
+      }
+      return eval(fn_exp.proc()->body());
     }
   }
   return Expr::err();

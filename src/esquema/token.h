@@ -14,6 +14,7 @@ enum class token_t {
   begin,
   false_,
   if_,
+  lambda,
   left_paren,
   quote,
   right_paren,

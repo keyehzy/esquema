@@ -30,6 +30,11 @@ Expr parser::parse_head() {
     this->skip();
     return if_exp;
   }
+  case token_t::lambda: {
+    Expr lambda_exp = Expr(Expr_kind::lambda, Atom(this->peek()));
+    this->skip();
+    return lambda_exp;
+  }
   case token_t::begin: {
     Expr begin_exp = Expr(Expr_kind::begin, Atom(this->peek()));
     this->skip();
