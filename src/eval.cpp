@@ -88,8 +88,8 @@ Expr evaluator::update(Expr symbol, Expr new_val) {
     }
   }
 
-  // If we don't find, declare it on the most recent scope
-  this->push_to_current_scope(symbol.atom(), new_val);
+  // If we don't find it, declare it in the global scope
+  this->push_to_global_scope(symbol.atom(), new_val);
   return new_val;
 }
 
@@ -98,6 +98,10 @@ Expr evaluator::eprogn(Expr exp) {
   Expr val = head;
   while (head.kind() == Expr_kind::cons) {
     val = this->eval(CAR(head));
+
+    // TODO: Check for errors
+    if (val.kind() == Expr_kind::err) return val;
+
     head = CDR(head);
   }
   return eval(val);
@@ -147,4 +151,8 @@ Env* evaluator::get_current_scope() { return m_scopes.back(); }
 
 void evaluator::push_to_current_scope(Atom symbol, Expr value) {
   this->get_current_scope()->emplace_back(symbol, value);
+}
+
+void evaluator::push_to_global_scope(Atom symbol, Expr value) {
+  m_env.emplace_back(symbol, value);
 }

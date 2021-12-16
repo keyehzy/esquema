@@ -23,6 +23,7 @@ class evaluator {
   void pop_scope();
   Env* get_current_scope();
   void push_to_current_scope(Atom, Expr);
+  void push_to_global_scope(Atom, Expr);
 
  private:
   Env m_env;
