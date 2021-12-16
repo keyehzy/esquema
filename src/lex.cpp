@@ -170,6 +170,8 @@ end:
     t.type = token_t::function;
   } else if (t.as_string() == "named-lambda"_sv) {
     t.type = token_t::named_lambda;
+  } else if (t.as_string() == "define"_sv) {
+    t.type = token_t::define;
   }
 
   return t;

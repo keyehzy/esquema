@@ -41,6 +41,7 @@ enum Expr_kind {
   cons,
 
   begin,
+  define,
   function,
   false_,
   if_,
@@ -111,33 +112,38 @@ typedef std::vector<symbol_value> Env;
 
 class Procedure {
  public:
-  Procedure(Expr params, Expr body)
-      : m_kind(procedure_kind::lambda), m_params(params), m_body(body){};
-  Procedure(Atom symbol, Expr params, Expr body)
+  Procedure(Expr params, Expr body, Env env)
+      : m_kind(procedure_kind::lambda),
+        m_params(params),
+        m_body(body),
+        m_env(env){};
+  Procedure(Atom symbol, Expr params, Expr body, Env env)
       : m_symbol(symbol),
         m_kind(procedure_kind::named_lambda),
         m_params(params),
-        m_body(body){};
-  Procedure(Atom symbol, NativeFn native_fn)
+        m_body(body),
+        m_env(env){};
+  Procedure(Atom symbol, NativeFn native_fn, Env env)
       : m_symbol(symbol),
         m_kind(procedure_kind::native),
-        m_native_fn(native_fn){};
+        m_native_fn(native_fn),
+        m_env(env){};
 
-  static Procedure* proc(Expr params, Expr body) {
+  static Procedure* proc(Expr params, Expr body, Env env) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(params, body);
+    *proc = Procedure(params, body, env);
     return proc;
   }
 
-  static Procedure* proc(Atom symbol, Expr params, Expr body) {
+  static Procedure* proc(Atom symbol, Expr params, Expr body, Env env) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(symbol, params, body);
+    *proc = Procedure(symbol, params, body, env);
     return proc;
   }
 
-  static Procedure* proc(Atom symbol, NativeFn native_fn) {
+  static Procedure* proc(Atom symbol, NativeFn native_fn, Env env) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(symbol, native_fn);
+    *proc = Procedure(symbol, native_fn, env);
     return proc;
   }
 

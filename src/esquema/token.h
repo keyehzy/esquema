@@ -12,6 +12,7 @@ enum class token_t {
   character,
 
   begin,
+  define,
   false_,
   function,
   if_,

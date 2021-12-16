@@ -3,31 +3,27 @@
 #include "expr.h"
 #include "parse.h"
 #include "string_view.h"
+#include <optional>
 #include <vector>
 
 class evaluator {
  public:
   explicit evaluator(string_view input);
-  void set_native_fn(Atom, NativeFn);
   void populate_env();
   Expr eval(Expr);
   Expr eval_atom(Expr);
-  Expr eval_symbol(Expr);
+  Expr eval_define(Expr);
+  Expr lookup_symbol(Expr);
   Expr eprogn(Expr);
-  Expr update(Expr, Expr);
+  Expr set(Atom, Expr);
   Expr value() const;
   Expr invoke(Expr, std::vector<Expr>);
   std::vector<Expr> eval_list(Expr);
-
-  void push_scope(Env*);
-  void pop_scope();
-  Env* get_current_scope();
-  void push_to_current_scope(Atom, Expr);
-  void push_to_global_scope(Atom, Expr);
+  Expr bind_variable_in_current_env(Atom, Expr);
 
  private:
-  Env m_env;
-  std::vector<Env*> m_scopes;
+  Env m_initial_env;
+  Env m_extended_env;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;
