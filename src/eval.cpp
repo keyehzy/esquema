@@ -85,14 +85,13 @@ Expr evaluator::update(Expr symbol, Expr new_val) {
 }
 
 Expr evaluator::eprogn(Expr exp) {
-  if (exp.kind() == Expr_kind::cons) {
-    if (CDR(exp).kind() == Expr_kind::cons) {
-      this->eval(CAR(exp));
-      return this->eprogn(CDR(exp));
-    }
-    return this->eval(CAR(exp));
+  Expr head = exp;
+  Expr val = head;
+  while (head.kind() == Expr_kind::cons) {
+    val = this->eval(CAR(head));
+    head = CDR(head);
   }
-  return Expr::nil();
+  return eval(val);
 }
 
 Expr evaluator::eval_atom(Expr exp) {
