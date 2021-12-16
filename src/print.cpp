@@ -1,4 +1,5 @@
 #include "esquema/eval.h"
+#include "esquema/expr.h"
 #include "esquema/lex.h"
 #include "esquema/parse.h"
 #include "esquema/print.h"
@@ -21,20 +22,54 @@ void pprint(Expr exp, string& str) {
       str.append(exp.atom().as_string());
     }
     break;
+
   case Expr_kind::cons:
-    if (exp.cons()->cdr.kind() == Expr_kind::nil) {
-      pprint(exp.cons()->car, str);
+    if (CDR(exp).kind() == Expr_kind::nil) {
+      pprint(CAR(exp), str);
+    } else if (CADR(exp).kind() == Expr_kind::atom) {
+      str.append("(");
+      Expr head = exp;
+      while (head.kind() == Expr_kind::cons) {
+        pprint(CAR(head), str);
+        if (CDR(head).kind() == Expr_kind::cons) str.append(" ");
+        head = CDR(head);
+      }
+      str.append(")");
     } else {
       str.append("(");
-      pprint(exp.cons()->car, str);
+      pprint(CAR(exp), str);
       str.append(" ");
-      pprint(exp.cons()->cdr, str);
+      pprint(CDR(exp), str);
       str.append(")");
     }
     break;
+
+  case Expr_kind::procedure:
+    if (exp.proc()->kind() == procedure_kind::lambda) {
+      str.append("(closure (t)");
+      if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
+        str.append(" (");
+        pprint(exp.proc()->params(), str);
+        str.append(") ");
+      } else {
+        str.append(" ");
+        pprint(exp.proc()->params(), str);
+        str.append(" ");
+      }
+      pprint(exp.proc()->body(), str);
+      str.append(")");
+    } else if (exp.proc()->kind() == procedure_kind::native) {
+      str.append("(native");
+      str.append(" \"");
+      str.append(exp.proc()->symbol().as_string());
+      str.append("\" ");
+    }
+    break;
+
   case Expr_kind::nil:
     str.append("()");
     break;
+
   case Expr_kind::err:
     str.append("ERROR!!!");
     break;

@@ -21,20 +21,20 @@ TEST(test, level1) {
   { EXPECT_EQ(print_quoted("->>"_sv), "->>"_sv); }
 
   // Testing read of lists
-  { EXPECT_EQ(print_quoted("(+ 1 2)"_sv), "(+ (1 2))"_sv); }
+  { EXPECT_EQ(print_quoted("(+ 1 2)"_sv), "(+ 1 2)"_sv); }
   { EXPECT_EQ(print_quoted("()"_sv), "()"_sv); }
   { EXPECT_EQ(print_quoted("( )"_sv), "()"_sv); }
   { EXPECT_EQ(print_quoted("(nil)"_sv), "nil"_sv); }
   { EXPECT_EQ(print_quoted("((3 4))"_sv), "(3 4)"_sv); }
-  { EXPECT_EQ(print_quoted("(+ 1 (+ 2 3))"_sv), "(+ (1 (+ (2 3))))"_sv); }
+  { EXPECT_EQ(print_quoted("(+ 1 (+ 2 3))"_sv), "(+ 1 (+ 2 3))"_sv); }
   {
     EXPECT_EQ(print_quoted("  ( +   1   (+   2 3   )   )  "_sv),
-              "(+ (1 (+ (2 3))))"_sv);
+              "(+ 1 (+ 2 3))"_sv);
   }
 
-  { EXPECT_EQ(print_quoted("(* 1 2)"_sv), "(* (1 2))"_sv); }
-  { EXPECT_EQ(print_quoted("(** 1 2)"_sv), "(** (1 2))"_sv); }
-  { EXPECT_EQ(print_quoted("(* -3 6)"_sv), "(* (-3 6))"_sv); }
+  { EXPECT_EQ(print_quoted("(* 1 2)"_sv), "(* 1 2)"_sv); }
+  { EXPECT_EQ(print_quoted("(** 1 2)"_sv), "(** 1 2)"_sv); }
+  { EXPECT_EQ(print_quoted("(* -3 6)"_sv), "(* -3 6)"_sv); }
   { EXPECT_EQ(print_quoted("(()())"_sv), "(() ())"_sv); }
 
   // Testing read of nil/true/false

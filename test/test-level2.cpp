@@ -3,15 +3,14 @@
 
 TEST(test, level2) {
   // Testing quote of lists
-  { EXPECT_EQ(print("'(+ 1 2)"_sv), "(+ (1 2))"_sv); }
+  { EXPECT_EQ(print("'(+ 1 2)"_sv), "(+ 1 2)"_sv); }
   { EXPECT_EQ(print("'()"_sv), "()"_sv); }
   { EXPECT_EQ(print("'( )"_sv), "()"_sv); }
   { EXPECT_EQ(print("'(nil)"_sv), "nil"_sv); }
   { EXPECT_EQ(print("'((3 4))"_sv), "(3 4)"_sv); }
-  { EXPECT_EQ(print("'(+ 1 (+ 2 3))"_sv), "(+ (1 (+ (2 3))))"_sv); }
+  { EXPECT_EQ(print("'(+ 1 (+ 2 3))"_sv), "(+ 1 (+ 2 3))"_sv); }
   {
-    EXPECT_EQ(print("'  ( +   1   (+   2 3   )   )  "_sv),
-              "(+ (1 (+ (2 3))))"_sv);
+    EXPECT_EQ(print("'  ( +   1   (+   2 3   )   )  "_sv), "(+ 1 (+ 2 3))"_sv);
   }
 
   // Testing if
@@ -49,5 +48,10 @@ TEST(test, level2) {
   {
     EXPECT_EQ(print("(begin (set! x (lambda (a) (+ a 1))) (x 41))"_sv),
               "42"_sv);
+  }
+  { EXPECT_EQ(print("(lambda (a) a)"_sv), "(closure (t) (a) a)"_sv); }
+  {
+    EXPECT_EQ(print("(lambda (a b) (+ a b))"_sv),
+              "(closure (t) (a b) (+ a b))"_sv);
   }
 }

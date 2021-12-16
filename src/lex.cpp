@@ -166,6 +166,8 @@ end:
     t.type = token_t::set;
   } else if (t.as_string() == "lambda"_sv) {
     t.type = token_t::lambda;
+  } else if (t.as_string() == "function"_sv) {
+    t.type = token_t::function;
   }
 
   return t;

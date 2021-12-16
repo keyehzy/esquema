@@ -40,6 +40,7 @@ enum Expr_kind {
   cons,
 
   begin,
+  function,
   false_,
   if_,
   lambda,
@@ -103,34 +104,44 @@ enum class procedure_kind {
 };
 
 typedef Expr (*NativeFn)(std::vector<Expr>);
+typedef std::vector<symbol_value> Env;
 
 class Procedure {
  public:
-  Procedure(Expr params, Expr body)
-      : m_kind(procedure_kind::lambda), m_params(params), m_body(body){};
-  Procedure(NativeFn native_fn)
-      : m_kind(procedure_kind::native), m_native_fn(native_fn){};
+  Procedure(Atom symbol, Expr params, Expr body)
+      : m_symbol(symbol),
+        m_kind(procedure_kind::lambda),
+        m_params(params),
+        m_body(body){};
+  Procedure(Atom symbol, NativeFn native_fn)
+      : m_symbol(symbol),
+        m_kind(procedure_kind::native),
+        m_native_fn(native_fn){};
 
-  static Procedure* proc(Expr params, Expr body) {
+  static Procedure* proc(Atom symbol, Expr params, Expr body) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(params, body);
+    *proc = Procedure(symbol, params, body);
     return proc;
   }
 
-  static Procedure* proc(NativeFn native_fn) {
+  static Procedure* proc(Atom symbol, NativeFn native_fn) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(native_fn);
+    *proc = Procedure(symbol, native_fn);
     return proc;
   }
 
+  Atom symbol() const { return m_symbol; }
   procedure_kind kind() const { return m_kind; }
   Expr params() const { return m_params; }
   Expr body() const { return m_body; }
   NativeFn native_fn() const { return m_native_fn; }
+  Env& env() { return m_env; }
 
  private:
+  Atom m_symbol;
   procedure_kind m_kind;
   Expr m_params;
   Expr m_body;
   NativeFn m_native_fn;
+  Env m_env;
 };

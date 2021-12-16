@@ -1,3 +1,4 @@
+#include "esquema/expr.h"
 #include "esquema/parse.h"
 #include "esquema/token.h"
 
@@ -20,41 +21,22 @@ Expr parser::parse_head() {
   case token_t::left_paren:
     this->skip();
     return this->parse_subexpr();
-  case token_t::quote: {
-    Expr quote = Expr(Expr_kind::quote, Atom(this->peek()));
-    this->skip();
-    return quote;
-  }
-  case token_t::if_: {
-    Expr if_exp = Expr(Expr_kind::if_, Atom(this->peek()));
-    this->skip();
-    return if_exp;
-  }
-  case token_t::lambda: {
-    Expr lambda_exp = Expr(Expr_kind::lambda, Atom(this->peek()));
-    this->skip();
-    return lambda_exp;
-  }
-  case token_t::begin: {
-    Expr begin_exp = Expr(Expr_kind::begin, Atom(this->peek()));
-    this->skip();
-    return begin_exp;
-  }
-  case token_t::set: {
-    Expr set_exp = Expr(Expr_kind::set, Atom(this->peek()));
-    this->skip();
-    return set_exp;
-  }
-  case token_t::true_: {
-    Expr true_exp = Expr(Expr_kind::true_, Atom(this->peek()));
-    this->skip();
-    return true_exp;
-  }
-  case token_t::false_: {
-    Expr false_exp = Expr(Expr_kind::false_, Atom(this->peek()));
-    this->skip();
-    return false_exp;
-  }
+  case token_t::quote:
+    return this->parse_single_token(Expr_kind::quote);
+  case token_t::if_:
+    return this->parse_single_token(Expr_kind::if_);
+  case token_t::lambda:
+    return this->parse_single_token(Expr_kind::lambda);
+  case token_t::begin:
+    return this->parse_single_token(Expr_kind::begin);
+  case token_t::set:
+    return this->parse_single_token(Expr_kind::set);
+  case token_t::true_:
+    return this->parse_single_token(Expr_kind::true_);
+  case token_t::false_:
+    return this->parse_single_token(Expr_kind::false_);
+  case token_t::function:
+    return this->parse_single_token(Expr_kind::function);
   case token_t::eof:
     this->skip();
     return Expr::nil();
@@ -81,4 +63,10 @@ Expr parser::parse_atom() {
   Expr exp = Expr(Atom(this->peek()));
   this->skip();
   return exp;
+}
+
+Expr parser::parse_single_token(Expr_kind kind) {
+  Expr e = Expr(kind, Atom(this->peek()));
+  this->skip();
+  return e;
 }

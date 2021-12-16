@@ -14,6 +14,7 @@ class parser {
   Expr parse_rest();
   Expr parse_atom();
   Expr parse_subexpr();
+  Expr parse_single_token(Expr_kind);
 
  private:
   lexer m_lexer;

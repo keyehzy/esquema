@@ -13,6 +13,7 @@ enum class token_t {
 
   begin,
   false_,
+  function,
   if_,
   lambda,
   left_paren,

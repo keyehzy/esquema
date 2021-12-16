@@ -7,6 +7,7 @@
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
   this->populate_env();
+  this->push_scope(&m_env);
   m_value = this->eval(m_original_value);
 };
 
@@ -30,7 +31,7 @@ Expr evaluator::eval(Expr exp) {
           return eval(CADDDR(exp));
         }
       case Expr_kind::lambda:
-        return Expr(Procedure::proc(CADR(exp), CDDR(exp)));
+        return Expr(Procedure::proc(exp.atom(), CADR(exp), CDDR(exp)));
       case Expr_kind::begin:
         return this->eprogn(CDR(exp));
       case Expr_kind::set:
@@ -59,16 +60,16 @@ Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
     if (fn_exp.proc()->kind() == procedure_kind::native) {
       return fn_exp.proc()->native_fn()(args);
     } else if (fn_exp.proc()->kind() == procedure_kind::lambda) {
-      std::vector<symbol_value> copy_env = m_local_env;
+      this->push_scope(&fn_exp.proc()->env());
       // TODO: bound checking
       // TODO: flatten proc()->params() so that we get rid of this non-sense
       Expr head = fn_exp.proc()->params();
       for (int index = 0; head.kind() == Expr_kind::cons; index++) {
-        m_local_env.emplace_back(CAR(head).atom(), args[index]);
+        this->push_to_current_scope(CAR(head).atom(), args[index]);
         head = CDR(head);
       }
       Expr result = this->eprogn(fn_exp.proc()->body());
-      m_local_env = copy_env;
+      this->pop_scope();
       return result;
     }
   }
@@ -76,13 +77,19 @@ Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
 }
 
 Expr evaluator::update(Expr symbol, Expr new_val) {
-  for (auto& [key, val] : m_local_env) {
-    if (symbol.atom() == key) {
-      val = new_val;
-      return new_val;
+  // Search from first search from recent to older scope
+  for (auto it = m_scopes.rbegin(); it != m_scopes.rend(); it++) {
+    Env* local_env = *it;
+    for (auto& [key, val] : *local_env) {
+      if (symbol.atom() == key) {
+        val = new_val;
+        return new_val;
+      }
     }
   }
-  m_local_env.emplace_back(symbol.atom(), new_val);
+
+  // If we don't find, declare it on the most recent scope
+  this->push_to_current_scope(symbol.atom(), new_val);
   return new_val;
 }
 
@@ -110,25 +117,34 @@ Expr evaluator::eval_atom(Expr exp) {
 }
 
 Expr evaluator::eval_symbol(Expr symbol) {
-  for (const auto& [key, val] : m_env) {
-    if (symbol.atom() == key) return val;
+  // Search from most recent scope to most older one
+  for (auto it = m_scopes.rbegin(); it != m_scopes.rend(); it++) {
+    Env* local_env = *it;
+    for (auto& [key, val] : *local_env) {
+      if (symbol.atom() == key) return val;
+    }
   }
-
-  for (const auto& [key, val] : m_local_env) {
-    if (symbol.atom() == key) return val;
-  }
-
   return symbol;
 }
 
-void evaluator::set(Atom symbol, Expr value) {
-  m_env.emplace_back(symbol, value);
+void evaluator::set_native_fn(Atom symbol, NativeFn fn) {
+  m_env.emplace_back(symbol, Expr(Procedure::proc(symbol, fn)));
 }
 
 void evaluator::populate_env() {
-  this->set(Atom(token_t::symbol, "+"_sv), Expr(Procedure::proc(NAT_plus)));
-  this->set(Atom(token_t::symbol, "-"_sv), Expr(Procedure::proc(NAT_minus)));
-  this->set(Atom(token_t::symbol, "*"_sv), Expr(Procedure::proc(NAT_times)));
-  this->set(Atom(token_t::symbol, "/"_sv), Expr(Procedure::proc(NAT_div)));
-  this->set(Atom(token_t::symbol, "%"_sv), Expr(Procedure::proc(NAT_mod)));
+  this->set_native_fn(Atom(token_t::symbol, "+"_sv), NAT_plus);
+  this->set_native_fn(Atom(token_t::symbol, "-"_sv), NAT_minus);
+  this->set_native_fn(Atom(token_t::symbol, "*"_sv), NAT_times);
+  this->set_native_fn(Atom(token_t::symbol, "/"_sv), NAT_div);
+  this->set_native_fn(Atom(token_t::symbol, "%"_sv), NAT_mod);
+}
+
+void evaluator::push_scope(Env* scope) { m_scopes.push_back(scope); }
+
+void evaluator::pop_scope() { m_scopes.pop_back(); }
+
+Env* evaluator::get_current_scope() { return m_scopes.back(); }
+
+void evaluator::push_to_current_scope(Atom symbol, Expr value) {
+  this->get_current_scope()->emplace_back(symbol, value);
 }

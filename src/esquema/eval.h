@@ -8,7 +8,7 @@
 class evaluator {
  public:
   explicit evaluator(string_view input);
-  void set(Atom, Expr);
+  void set_native_fn(Atom, NativeFn);
   void populate_env();
   Expr eval(Expr);
   Expr eval_atom(Expr);
@@ -19,11 +19,14 @@ class evaluator {
   Expr invoke(Expr, std::vector<Expr>);
   std::vector<Expr> eval_list(Expr);
 
-  static Expr my_plus(Expr);
+  void push_scope(Env*);
+  void pop_scope();
+  Env* get_current_scope();
+  void push_to_current_scope(Atom, Expr);
 
  private:
-  std::vector<symbol_value> m_env;
-  std::vector<symbol_value> m_local_env;
+  Env m_env;
+  std::vector<Env*> m_scopes;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;
