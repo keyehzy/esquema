@@ -127,12 +127,10 @@ class Procedure {
   Expr params() const { return m_params; }
   Expr body() const { return m_body; }
   NativeFn native_fn() const { return m_native_fn; }
-  std::vector<symbol_value>& env() { return m_env; }
 
  private:
   procedure_kind m_kind;
   Expr m_params;
   Expr m_body;
   NativeFn m_native_fn;
-  std::vector<symbol_value> m_env;
 };

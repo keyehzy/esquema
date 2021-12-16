@@ -59,28 +59,30 @@ Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
     if (fn_exp.proc()->kind() == procedure_kind::native) {
       return fn_exp.proc()->native_fn()(args);
     } else if (fn_exp.proc()->kind() == procedure_kind::lambda) {
+      std::vector<symbol_value> copy_env = m_local_env;
       // TODO: bound checking
       // TODO: flatten proc()->params() so that we get rid of this non-sense
       Expr head = fn_exp.proc()->params();
-      int index = 0;
-      while (head.kind() == Expr_kind::cons) {
-        m_env.emplace_back(CAR(head).atom(), args[index++]);
+      for (int index = 0; head.kind() == Expr_kind::cons; index++) {
+        m_local_env.emplace_back(CAR(head).atom(), args[index]);
         head = CDR(head);
       }
-      return eval(fn_exp.proc()->body());
+      Expr result = this->eprogn(fn_exp.proc()->body());
+      m_local_env = copy_env;
+      return result;
     }
   }
   return Expr::err();
 }
 
 Expr evaluator::update(Expr symbol, Expr new_val) {
-  for (auto& [key, val] : m_env) {
+  for (auto& [key, val] : m_local_env) {
     if (symbol.atom() == key) {
       val = new_val;
       return new_val;
     }
   }
-  m_env.push_back(symbol_value{symbol.atom(), new_val});
+  m_local_env.emplace_back(symbol.atom(), new_val);
   return new_val;
 }
 
@@ -111,6 +113,11 @@ Expr evaluator::eval_symbol(Expr symbol) {
   for (const auto& [key, val] : m_env) {
     if (symbol.atom() == key) return val;
   }
+
+  for (const auto& [key, val] : m_local_env) {
+    if (symbol.atom() == key) return val;
+  }
+
   return symbol;
 }
 
