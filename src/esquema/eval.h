@@ -28,8 +28,14 @@ class evaluator {
   parser m_parser;
 };
 
-#define CAR(x) (x).cons()->car
-#define CDR(x) (x).cons()->cdr
-#define CADR(x) (x).cons()->cdr.cons()->car
-#define CADDR(x) (x).cons()->cdr.cons()->cdr.cons()->car
-#define CADDDR(x) (x).cons()->cdr.cons()->cdr.cons()->cdr.cons()->car
+inline Expr CAR(Expr x) { return x.cons()->car; }
+
+inline Expr CDR(Expr x) { return x.cons()->cdr; }
+
+inline Expr CADR(Expr x) { return x.cons()->cdr.cons()->car; }
+
+inline Expr CADDR(Expr x) { return x.cons()->cdr.cons()->cdr.cons()->car; }
+
+inline Expr CADDDR(Expr x) {
+  return x.cons()->cdr.cons()->cdr.cons()->cdr.cons()->car;
+}
