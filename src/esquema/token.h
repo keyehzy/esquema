@@ -16,6 +16,7 @@ enum class token_t {
   function,
   if_,
   lambda,
+  named_lambda,
   left_paren,
   quote,
   right_paren,

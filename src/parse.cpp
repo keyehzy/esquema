@@ -37,6 +37,8 @@ Expr parser::parse_head() {
     return this->parse_single_token(Expr_kind::false_);
   case token_t::function:
     return this->parse_single_token(Expr_kind::function);
+  case token_t::named_lambda:
+    return this->parse_single_token(Expr_kind::named_lambda);
   case token_t::eof:
     this->skip();
     return Expr::nil();

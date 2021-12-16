@@ -54,4 +54,11 @@ TEST(test, level2) {
     EXPECT_EQ(print("(lambda (a b) (+ a b))"_sv),
               "(closure (t) (a b) (+ a b))"_sv);
   }
+
+  // Testing named-lambdas
+  { EXPECT_EQ(print("((named-lambda (f a) a) 1)"_sv), "1"_sv); }
+  { EXPECT_EQ(print("((named-lambda (f a) (+ a 1)) 1)"_sv), "2"_sv); }
+  { EXPECT_EQ(print("((named-lambda (f a) foo (+ a 1)) 1)"_sv), "2"_sv); }
+  { EXPECT_EQ(print("((named-lambda (f x y) (* x y)) 2 3)"_sv), "6"_sv); }
+  { EXPECT_EQ(print("(named-lambda (f a) a)"_sv), "(closure f (t) (a) a)"_sv); }
 }

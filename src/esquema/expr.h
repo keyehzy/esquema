@@ -9,6 +9,7 @@ class Atom {
   Atom(token tok) : m_token(tok){};
   Atom(token_t type, location loc) : m_token(token(type, loc)){};
   Atom(token_t type, string_view sv) : m_token(token(type, sv)){};
+  Atom(string_view sv) : m_token(token(token_t::symbol, sv)){};
   Atom(int i)
       : is_evaluated(true), m_token(token(token_t::integer)), m_value_int(i){};
   Atom(double f)
@@ -44,6 +45,7 @@ enum Expr_kind {
   false_,
   if_,
   lambda,
+  named_lambda,
   procedure,
   quote,
   set,
@@ -101,6 +103,7 @@ struct symbol_value {
 enum class procedure_kind {
   native,
   lambda,
+  named_lambda,
 };
 
 typedef Expr (*NativeFn)(std::vector<Expr>);
@@ -108,15 +111,23 @@ typedef std::vector<symbol_value> Env;
 
 class Procedure {
  public:
+  Procedure(Expr params, Expr body)
+      : m_kind(procedure_kind::lambda), m_params(params), m_body(body){};
   Procedure(Atom symbol, Expr params, Expr body)
       : m_symbol(symbol),
-        m_kind(procedure_kind::lambda),
+        m_kind(procedure_kind::named_lambda),
         m_params(params),
         m_body(body){};
   Procedure(Atom symbol, NativeFn native_fn)
       : m_symbol(symbol),
         m_kind(procedure_kind::native),
         m_native_fn(native_fn){};
+
+  static Procedure* proc(Expr params, Expr body) {
+    Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
+    *proc = Procedure(params, body);
+    return proc;
+  }
 
   static Procedure* proc(Atom symbol, Expr params, Expr body) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));

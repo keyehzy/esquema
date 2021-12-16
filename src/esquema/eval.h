@@ -35,6 +35,7 @@ class evaluator {
 
 inline Expr CAR(Expr x) { return x.cons()->car; }
 inline Expr CADR(Expr x) { return x.cons()->cdr.cons()->car; }
+inline Expr CAADR(Expr x) { return x.cons()->cdr.cons()->car.cons()->car; }
 inline Expr CADDR(Expr x) { return x.cons()->cdr.cons()->cdr.cons()->car; }
 inline Expr CADDDR(Expr x) {
   return x.cons()->cdr.cons()->cdr.cons()->cdr.cons()->car;
@@ -42,3 +43,5 @@ inline Expr CADDDR(Expr x) {
 
 inline Expr CDR(Expr x) { return x.cons()->cdr; }
 inline Expr CDDR(Expr x) { return x.cons()->cdr.cons()->cdr; }
+inline Expr CDAR(Expr x) { return x.cons()->car.cons()->cdr; }
+inline Expr CDADR(Expr x) { return x.cons()->cdr.cons()->car.cons()->cdr; }

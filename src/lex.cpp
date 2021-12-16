@@ -168,6 +168,8 @@ end:
     t.type = token_t::lambda;
   } else if (t.as_string() == "function"_sv) {
     t.type = token_t::function;
+  } else if (t.as_string() == "named-lambda"_sv) {
+    t.type = token_t::named_lambda;
   }
 
   return t;

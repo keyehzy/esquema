@@ -31,7 +31,9 @@ Expr evaluator::eval(Expr exp) {
           return eval(CADDDR(exp));
         }
       case Expr_kind::lambda:
-        return Expr(Procedure::proc(exp.atom(), CADR(exp), CDDR(exp)));
+        return Expr(Procedure::proc(CADR(exp), CDDR(exp)));
+      case Expr_kind::named_lambda:
+        return Expr(Procedure::proc(CAADR(exp).atom(), CDADR(exp), CDDR(exp)));
       case Expr_kind::begin:
         return this->eprogn(CDR(exp));
       case Expr_kind::set:
@@ -56,24 +58,25 @@ std::vector<Expr> evaluator::eval_list(Expr exp) {
 }
 
 Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
-  if (fn_exp.kind() == Expr_kind::procedure) {
-    if (fn_exp.proc()->kind() == procedure_kind::native) {
-      return fn_exp.proc()->native_fn()(args);
-    } else if (fn_exp.proc()->kind() == procedure_kind::lambda) {
-      this->push_scope(&fn_exp.proc()->env());
-      // TODO: bound checking
-      // TODO: flatten proc()->params() so that we get rid of this non-sense
-      Expr head = fn_exp.proc()->params();
-      for (int index = 0; head.kind() == Expr_kind::cons; index++) {
-        this->push_to_current_scope(CAR(head).atom(), args[index]);
-        head = CDR(head);
-      }
-      Expr result = this->eprogn(fn_exp.proc()->body());
-      this->pop_scope();
-      return result;
+  if (fn_exp.kind() != Expr_kind::procedure) return Expr::err();
+  switch (fn_exp.proc()->kind()) {
+  case procedure_kind::native:
+    return fn_exp.proc()->native_fn()(args);
+  case procedure_kind::named_lambda:
+  case procedure_kind::lambda: {
+    this->push_scope(&fn_exp.proc()->env());
+    // TODO: bound checking
+    // TODO: flatten proc()->params() so that we get rid of this non-sense
+    Expr head = fn_exp.proc()->params();
+    for (int index = 0; head.kind() == Expr_kind::cons; index++) {
+      this->push_to_current_scope(CAR(head).atom(), args[index]);
+      head = CDR(head);
     }
+    Expr result = this->eprogn(fn_exp.proc()->body());
+    this->pop_scope();
+    return result;
   }
-  return Expr::err();
+  }
 }
 
 Expr evaluator::update(Expr symbol, Expr new_val) {
@@ -136,11 +139,11 @@ void evaluator::set_native_fn(Atom symbol, NativeFn fn) {
 }
 
 void evaluator::populate_env() {
-  this->set_native_fn(Atom(token_t::symbol, "+"_sv), NAT_plus);
-  this->set_native_fn(Atom(token_t::symbol, "-"_sv), NAT_minus);
-  this->set_native_fn(Atom(token_t::symbol, "*"_sv), NAT_times);
-  this->set_native_fn(Atom(token_t::symbol, "/"_sv), NAT_div);
-  this->set_native_fn(Atom(token_t::symbol, "%"_sv), NAT_mod);
+  this->set_native_fn(Atom("+"_sv), NAT_plus);
+  this->set_native_fn(Atom("-"_sv), NAT_minus);
+  this->set_native_fn(Atom("*"_sv), NAT_times);
+  this->set_native_fn(Atom("/"_sv), NAT_div);
+  this->set_native_fn(Atom("%"_sv), NAT_mod);
 }
 
 void evaluator::push_scope(Env* scope) { m_scopes.push_back(scope); }

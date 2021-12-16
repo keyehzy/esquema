@@ -8,6 +8,7 @@
 #include <iostream>
 
 void pprint(Expr exp, string& str) {
+  // TODO: this function should use some sort of formatted-string
   switch (exp.kind()) {
   case Expr_kind::atom:
     if (exp.atom().is_evaluated) {
@@ -47,6 +48,21 @@ void pprint(Expr exp, string& str) {
   case Expr_kind::procedure:
     if (exp.proc()->kind() == procedure_kind::lambda) {
       str.append("(closure (t)");
+      if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
+        str.append(" (");
+        pprint(exp.proc()->params(), str);
+        str.append(") ");
+      } else {
+        str.append(" ");
+        pprint(exp.proc()->params(), str);
+        str.append(" ");
+      }
+      pprint(exp.proc()->body(), str);
+      str.append(")");
+    } else if (exp.proc()->kind() == procedure_kind::named_lambda) {
+      str.append("(closure ");
+      str.append(exp.proc()->symbol().as_string());
+      str.append(" (t)");
       if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
         str.append(" (");
         pprint(exp.proc()->params(), str);
