@@ -8,7 +8,7 @@
 class evaluator {
  public:
   explicit evaluator(string_view input);
-  void extend_env(Atom, Expr);
+  void set(Atom, Expr);
   void populate_env();
   Expr eval(Expr);
   Expr eval_atom(Expr);
