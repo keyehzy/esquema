@@ -43,6 +43,7 @@ TEST(test, level2) {
   // Testing lambdas
   { EXPECT_EQ(print("((lambda (a) a) 1)"_sv), "1"_sv); }
   { EXPECT_EQ(print("((lambda (a) (+ a 1)) 1)"_sv), "2"_sv); }
+  { EXPECT_EQ(print("((lambda (a) foo (+ a 1)) 1)"_sv), "2"_sv); }
   { EXPECT_EQ(print("((lambda (x y) (* x y)) 2 3)"_sv), "6"_sv); }
   { EXPECT_EQ(print("((lambda (a) ((lambda (b) (+ a b)) 1)) 2)"_sv), "3"_sv); }
   {

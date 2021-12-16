@@ -30,7 +30,7 @@ Expr evaluator::eval(Expr exp) {
           return eval(CADDDR(exp));
         }
       case Expr_kind::lambda:
-        return Expr(Procedure::proc(CADR(exp), CADDR(exp)));
+        return Expr(Procedure::proc(CADR(exp), CDDR(exp)));
       case Expr_kind::begin:
         return this->eprogn(CDR(exp));
       case Expr_kind::set:

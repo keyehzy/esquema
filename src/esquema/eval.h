@@ -23,19 +23,18 @@ class evaluator {
 
  private:
   std::vector<symbol_value> m_env;
+  std::vector<symbol_value> m_local_env;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;
 };
 
 inline Expr CAR(Expr x) { return x.cons()->car; }
-
-inline Expr CDR(Expr x) { return x.cons()->cdr; }
-
 inline Expr CADR(Expr x) { return x.cons()->cdr.cons()->car; }
-
 inline Expr CADDR(Expr x) { return x.cons()->cdr.cons()->cdr.cons()->car; }
-
 inline Expr CADDDR(Expr x) {
   return x.cons()->cdr.cons()->cdr.cons()->cdr.cons()->car;
 }
+
+inline Expr CDR(Expr x) { return x.cons()->cdr; }
+inline Expr CDDR(Expr x) { return x.cons()->cdr.cons()->cdr; }
