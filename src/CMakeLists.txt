@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
-
 add_executable(
   esquema
   esquema.cpp
 )
-target_link_libraries(esquema PRIVATE esquema-lib)
+target_link_libraries(esquema PRIVATE esquema-lib editline)
 
 add_library(
   esquema-lib
