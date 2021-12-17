@@ -22,6 +22,7 @@ class printer {
   void print_cons(Expr);
   void print_procedure(Expr);
   void print_block(Expr);
+  void print_closure(Expr);
 
   string_view m_original_input;
   std::vector<padded_string> m_buffer;

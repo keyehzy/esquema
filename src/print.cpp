@@ -28,84 +28,15 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
   case Expr_kind::atom:
     this->print_atom(exp, pad);
     break;
-  // TODO: Redo this following the same flow as eval function
   case Expr_kind::cons:
     this->print_cons(exp);
     break;
-  // TODO: closures are always returning (t), which is wrong. See
-  // https://nullprogram.com/blog/2013/12/30/ for a example of clusure
-  // returning contents from its environment case Expr_kind::procedure:
-  //   if (exp.proc()->kind() == procedure_kind::lambda) {
-  //     this->append("(closure (t)"_sv);
-  //     if (exp.proc()->params().kind() == Expr_kind::nil) {
-  //       this->append(" nil "_sv);
-  //     } else if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
-  //       this->append(" ("_sv);
-  //       pprint(exp.proc()->params());
-  //       this->append(") "_sv);
-  //     } else {
-  //       this->append(" "_sv);
-  //       pprint(exp.proc()->params());
-  //       this->append(" "_sv);
-  //     }
-  //     pprint(exp.proc()->body());
-  //     this->append(")"_sv);
-  //   } else if (exp.proc()->kind() == procedure_kind::named_lambda) {
-  //     this->append("(closure "_sv);
-  //     this->append(exp.proc()->symbol().as_string());
-  //     this->append(" (t)"_sv);
-  //     if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
-  //       this->append(" ("_sv);
-  //       pprint(exp.proc()->params());
-  //       this->append(") "_sv);
-  //     } else {
-  //       this->append(" "_sv);
-  //       pprint(exp.proc()->params());
-  //       this->append(" "_sv);
-  //     }
-  //     pprint(exp.proc()->body());
-  //     this->append(")"_sv);
-  //   } else if (exp.proc()->kind() == procedure_kind::native) {
-  //     this->append("(native"_sv);
-  //     this->append(" \""_sv);
-  //     this->append(exp.proc()->symbol().as_string());
-  //     this->append("\" "_sv);
-  //   }
-  //   break;
-
-  // case Expr_kind::lambda:
-  //   this->append("lambda"_sv);
-  //   if (CADR(exp).kind() == Expr_kind::nil) {
-  //     this->append(" nil "_sv);
-  //   } else if (CDR(CADR(exp)).kind() == Expr_kind::nil) {
-  //     this->append(" ("_sv);
-  //     pprint(CADR(exp));
-  //     this->append(") "_sv);
-  //   } else {
-  //     this->append(" ("_sv);
-  //     pprint(CADR(exp));
-  //     this->append(") "_sv);
-  //   }
-  //   pprint(CDDR(exp));
-  //   this->append(")"_sv);
-  //   break;
-
-  // case Expr_kind::if_:
-  //   this->append("if"_sv);
-  //   break;
-
-  // case Expr_kind::nil:
-  //   this->append("()"_sv);
-  //   break;
-
-  // case Expr_kind::err:
-  //   this->append("ERROR!!!"_sv);
-  //   break;
-  // }
   case Expr_kind::nil:
     this->append("()"_sv, pad);
     break;
-
+  case Expr_kind::procedure:
+    this->print_procedure(exp);
+    break;
   default:
     this->append("ERROR!!!"_sv);
     break;
@@ -128,8 +59,9 @@ void printer::print_cons(Expr exp) {
       break;
     case Expr_kind::lambda:
       PAREN_BLOCK(this->append("lambda"_sv, padding::right);
-                  RPAD_PAREN_BLOCK(this->pprint(CADR(exp)););
-                  this->pprint(CDDR(exp)););  // FIXME: nested paren_block
+                  RPAD_PAREN_BLOCK(this->pprint(CADR(exp));); this->pprint(
+                      CDDR(exp)););  // FIXME: nested paren_block
+                                     // TODO: maybe this is a print_block?
       break;
     case Expr_kind::named_lambda:
       PAREN_BLOCK(this->append("named-lambda"_sv, padding::right);
@@ -150,9 +82,6 @@ void printer::print_cons(Expr exp) {
       PAREN_BLOCK(this->append("set!"_sv, padding::right);
                   this->append(CADR(exp).atom().as_string());
                   this->pprint(CADDR(exp)););
-      break;
-    case Expr_kind::procedure:
-      this->print_procedure(exp);
       break;
     default:
       PAREN_BLOCK(this->pprint(CAR(exp), padding::right);
@@ -180,7 +109,38 @@ void printer::print_procedure(Expr exp) {
     PAREN_BLOCK(this->append(exp.proc()->symbol().as_string());
                 this->pprint(exp.proc()->params()););
     break;
+  case procedure_kind::lambda:
+  case procedure_kind::named_lambda:
+    PAREN_BLOCK(this->print_closure(exp););
+    break;
   }
+}
+
+// TODO: closures are always returning (t), which is wrong. See
+// https://nullprogram.com/blog/2013/12/30/ for a example of clusure
+// returning contents from its environment case Expr_kind::procedure:
+void printer::print_closure(Expr lambda) {
+  this->append("closure"_sv, padding::right);
+
+  if (lambda.proc()->kind() == procedure_kind::named_lambda)
+    this->append(lambda.proc()->symbol().as_string(), padding::right);
+
+  RPAD_PAREN_BLOCK(
+      if(lambda.proc()->env().empty())
+        this->append("t"_sv););
+
+  Expr params = lambda.proc()->params();
+  Expr body = lambda.proc()->body();
+
+  if (params.kind() == Expr_kind::nil) {
+    this->append("nil"_sv, padding::right);
+  } else if (CDR(params).kind() == Expr_kind::nil) {
+    RPAD_PAREN_BLOCK(this->pprint(params));
+  } else {
+    this->pprint(params);
+    this->append(" "_sv);  // FIXME: plz
+  }
+  this->pprint(body);
 }
 
 void printer::print_atom(Expr exp, padding pad = padding::none) {
@@ -218,19 +178,19 @@ string printer::dump_buffer() {
     switch (pad_str.padding_kind()) {
     case padding::left:
       s.append(" ");
-      s.append(pad_str.to_string_view());
+      s.append(pad_str.to_string());
       break;
     case padding::right:
-      s.append(pad_str.to_string_view());
+      s.append(pad_str.to_string());
       s.append(" ");
       break;
     case padding::both:
       s.append(" ");
-      s.append(pad_str.to_string_view());
+      s.append(pad_str.to_string());
       s.append(" ");
       break;
     case padding::none:
-      s.append(pad_str.to_string_view());
+      s.append(pad_str.to_string());
       break;
     }
   }
