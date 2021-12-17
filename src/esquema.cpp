@@ -6,7 +6,8 @@
 int main(void) {
   char *buffer;
   while ((buffer = readline("esquema> ")) != NULL) {
-    string res = print(buffer);
+    printer p(buffer);
+    string res = p.print();
     if (!res.empty()) {
       std::cout << res << std::endl;
     }

@@ -33,7 +33,8 @@ Expr evaluator::eval(Expr exp) {
         return Expr(Procedure::proc(/*params=*/CADR(exp), /*body=*/CDDR(exp),
                                     m_extended_env));
       case Expr_kind::named_lambda:
-        return Expr(Procedure::proc(CAADR(exp).atom(), CDADR(exp), CDDR(exp),
+        return Expr(Procedure::proc(/*symbol=*/CAADR(exp).atom(),
+                                    /*params=*/CDADR(exp), /*body=*/CDDR(exp),
                                     m_extended_env));
       case Expr_kind::define:
         return this->eval_define(exp);
