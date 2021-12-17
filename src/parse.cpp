@@ -7,6 +7,7 @@ parser::parser(string_view input) : m_lexer(lexer(input)){};
 Expr parser::parse_program() {
   if (this->peek().type == token_t::eof) return Expr::nil();
   Expr head = parse_head();
+  if (head.kind() == Expr_kind::err) return head;
   Expr rest = parse_program();
   return Expr(Cons::cons(head, rest));
 }
@@ -22,8 +23,7 @@ Expr parser::parse_head() {
     this->skip();
     return this->parse_subexpr();
   case token_t::quote: {
-    Expr quote_exp = Expr(Expr_kind::quote, Atom(this->peek()));
-    this->skip();
+    Expr quote_exp = this->parse_single_token(Expr_kind::quote);
     Expr quoted = this->parse_head();
     // TODO: check for errors
     if (quoted.kind() == Expr_kind::err) return quoted;
@@ -48,10 +48,8 @@ Expr parser::parse_head() {
   case token_t::define:
     return this->parse_single_token(Expr_kind::define);
   case token_t::eof:
-    this->skip();
     return Expr::nil();
   default:
-    this->skip();
     return Expr::err();
   }
 }
@@ -61,8 +59,11 @@ Expr parser::parse_subexpr() {
   case token_t::right_paren:
     this->skip();
     return Expr::nil();
+  case token_t::eof:
+    return Expr::err();
   default: {
     Expr head = this->parse_head();
+    if (head.kind() == Expr_kind::err) return head;
     Expr rest = this->parse_subexpr();
     return Expr(Cons::cons(head, rest));
   }
