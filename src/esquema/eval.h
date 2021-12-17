@@ -21,6 +21,8 @@ class evaluator {
   std::vector<Expr> eval_list(Expr);
   Expr bind_variable_in_current_env(Atom, Expr);
 
+  Env join(const Env&, const Env&);
+
  private:
   Env m_initial_env;
   Env m_extended_env;

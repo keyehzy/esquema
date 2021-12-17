@@ -48,7 +48,9 @@ void pprint(Expr exp, string& str) {
   case Expr_kind::procedure:
     if (exp.proc()->kind() == procedure_kind::lambda) {
       str.append("(closure (t)");
-      if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
+      if (exp.proc()->params().kind() == Expr_kind::nil) {
+        str.append(" () ");
+      } else if (CDR(exp.proc()->params()).kind() == Expr_kind::nil) {
         str.append(" (");
         pprint(exp.proc()->params(), str);
         str.append(") ");
@@ -80,6 +82,14 @@ void pprint(Expr exp, string& str) {
       str.append(exp.proc()->symbol().as_string());
       str.append("\" ");
     }
+    break;
+
+  case Expr_kind::lambda:
+    str.append("lambda");
+    break;
+
+  case Expr_kind::if_:
+    str.append("if");
     break;
 
   case Expr_kind::nil:

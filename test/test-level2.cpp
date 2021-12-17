@@ -62,8 +62,23 @@ TEST(test, level2) {
   { EXPECT_EQ(print("((named-lambda (f x y) (* x y)) 2 3)"_sv), "6"_sv); }
   { EXPECT_EQ(print("(named-lambda (f a) a)"_sv), "(closure f (t) (a) a)"_sv); }
 
+  // Testing define (first form)
+  { EXPECT_EQ(print("(begin (define x 1) x)"_sv), "1"_sv); };
+
+  // { EXPECT_EQ(print("(begin (define bar))"_sv), "bar"_sv); }; // TODO: we
+  // need to differenciate between 'nothing' and nill
+
+  {
+    EXPECT_EQ(print("(begin (define add3 (lambda (x) (+ x 3))) (add3 3))"_sv),
+              "6"_sv);
+  };
+  {
+    EXPECT_EQ(
+        print(
+            "(begin (define x 1) (define (f x) (g 2)) (define (g y) (+ x y)) (f 5))"_sv),
+        "3"_sv);
+  };
+
   // Testing define (second form)
   { EXPECT_EQ(print("(begin (define (f x) x) (f 1))"_sv), "1"_sv); };
-  // { EXPECT_EQ(print("(begin (define x 1) (define (f x) (g 2)) (define (g y)
-  // (+ x y)) (f 5))"_sv), "3"_sv); }
 }

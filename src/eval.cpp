@@ -52,14 +52,22 @@ Expr evaluator::eval(Expr exp) {
 // TODO: this the second form of *define*, implement the first one. See sec. 2.4
 // https://www.gnu.org/software/mit-scheme/documentation/stable/mit-scheme-ref.pdf
 Expr evaluator::eval_define(Expr exp) {
-  Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
-  Expr baked_named_lambda =
-      Expr(Procedure::proc(variable.atom(), params, body, m_extended_env));
-  Expr try_set = this->set(variable.atom(), baked_named_lambda);
-  if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
-    return try_set;
-  return this->bind_variable_in_current_env(variable.atom(),
-                                            baked_named_lambda);
+  if (CADR(exp).kind() == Expr_kind::cons) {
+    Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
+    Expr baked_named_lambda =
+        Expr(Procedure::proc(variable.atom(), params, body, m_extended_env));
+    Expr try_set = this->set(variable.atom(), baked_named_lambda);
+    if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
+      return try_set;
+    return this->bind_variable_in_current_env(variable.atom(),
+                                              baked_named_lambda);
+  } else {
+    Expr variable = CADR(exp), expression = eval(CDDR(exp));
+    Expr try_set = this->set(variable.atom(), expression);
+    if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
+      return try_set;
+    return this->bind_variable_in_current_env(variable.atom(), expression);
+  }
 }
 
 std::vector<Expr> evaluator::eval_list(Expr exp) {
@@ -80,7 +88,7 @@ Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
   case procedure_kind::named_lambda:
   case procedure_kind::lambda: {
     Env copy_env = m_extended_env;
-    m_extended_env = fn_exp.proc()->env();
+    m_extended_env = this->join(copy_env, fn_exp.proc()->env());
     // TODO: bound checking
     // TODO: flatten proc()->params() so that we get rid of this non-sense
     Expr head = fn_exp.proc()->params();
@@ -154,7 +162,14 @@ void evaluator::populate_env() {
   set_native_fn(Atom("%"_sv), NAT_mod);
 }
 
+// TODO: We need to differenciete between nothing and nil
 Expr evaluator::bind_variable_in_current_env(Atom symbol, Expr value) {
   m_extended_env.emplace_back(symbol, value);
   return value;
+}
+
+Env evaluator::join(const Env& dst, const Env& src) {
+  Env new_env = dst;
+  for (const auto& sv : src) new_env.push_back(sv);
+  return new_env;
 }
