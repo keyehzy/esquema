@@ -84,21 +84,12 @@ TEST(test, level1) {
   { EXPECT_EQ(print_quoted(R"---("!")---"), R"---("!")---"); }
 
   // Testing read of quoting
-  // { EXPECT_EQ(print_quoted(R"('1)"), R"((quote (1 nil)))"); }
-  // {
-  //   EXPECT_EQ(print_quoted(R"('(1 2 3))"), R"((quote ((1 (2 3)) nil)))");
-  // }
-  // { EXPECT_EQ(print_quoted(R"(`1)"), R"(1)"); }
-  // { EXPECT_EQ(print_quoted(R"(`(1 2 3))"), R"((1 (2 3)))"); }
-  // { EXPECT_EQ(print_quoted(R"(,1)"), R"((comma (1 nil)))"); }
-  // {
-  //   EXPECT_EQ(print_quoted(R"(,(1 2 3))"), R"((comma ((1 (2 3)) nil)))");
-  // }
-  // {
-  //   EXPECT_EQ(print_quoted(R"(`(1 ,a 3))"), R"((1 ((comma (a nil)) 3)))");
-  // }
-  // {
-  //   EXPECT_EQ(print_quoted(R"(,@(1 2 3))"),
-  //                R"((commaat ((1 (2 3)) nil)))");
-  // }
+  { EXPECT_EQ(print_quoted("'1"), "(quote 1)"); }
+  { EXPECT_EQ(print_quoted("'(1 2 3)"), "(quote (1 2 3))"); }
+  // { EXPECT_EQ(print_quoted("(`1)"), "(1)"); }
+  // { EXPECT_EQ(print_quoted("(`(1 2 3))"), "((1 (2 3)))"); }
+  // { EXPECT_EQ(print_quoted("(,1)"), "((comma (1 nil)))"); }
+  // { EXPECT_EQ(print_quoted("(,(1 2 3))"), "((comma ((1 (2 3)) nil)))"); }
+  // { EXPECT_EQ(print_quoted("(`(1 ,a 3))"), "((1 ((comma (a nil)) 3)))"); }
+  // { EXPECT_EQ(print_quoted("(,@(1 2 3))"), "((commaat ((1 (2 3)) nil)))"); }
 }

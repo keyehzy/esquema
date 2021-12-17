@@ -61,6 +61,7 @@ class Expr {
   Expr(){};
   explicit Expr(Atom atom) : m_kind(Expr_kind::atom), m_atom(atom){};
   explicit Expr(Cons* cons) : m_kind(Expr_kind::cons), m_cons(cons){};
+  explicit Expr(token token_) : Expr(Atom(token_)){};
   explicit Expr(Expr_kind kind, Atom atom) : m_kind(kind), m_atom(atom){};
   explicit Expr(Expr_kind kind, Cons* cons) : m_kind(kind), m_cons(cons){};
   explicit Expr(Procedure* proc) : m_kind(Expr_kind::procedure), m_proc(proc){};

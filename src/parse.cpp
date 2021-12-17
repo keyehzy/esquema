@@ -21,8 +21,14 @@ Expr parser::parse_head() {
   case token_t::left_paren:
     this->skip();
     return this->parse_subexpr();
-  case token_t::quote:
-    return this->parse_single_token(Expr_kind::quote);
+  case token_t::quote: {
+    Expr quote_exp = Expr(Expr_kind::quote, Atom(this->peek()));
+    this->skip();
+    Expr quoted = this->parse_head();
+    // TODO: check for errors
+    if (quoted.kind() == Expr_kind::err) return quoted;
+    return Expr(Cons::cons(quote_exp, Expr(Cons::cons(quoted, Expr::nil()))));
+  }
   case token_t::if_:
     return this->parse_single_token(Expr_kind::if_);
   case token_t::lambda:

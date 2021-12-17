@@ -25,7 +25,11 @@ void pprint(Expr exp, string& str) {
     break;
 
   case Expr_kind::cons:
-    if (CDR(exp).kind() == Expr_kind::nil) {
+    if (CAR(exp).kind() == Expr_kind::quote) {
+      str.append("(quote ");
+      pprint(CADR(exp), str);
+      str.append(")");
+    } else if (CDR(exp).kind() == Expr_kind::nil) {
       pprint(CAR(exp), str);
     } else if (CADR(exp).kind() == Expr_kind::atom) {
       str.append("(");
