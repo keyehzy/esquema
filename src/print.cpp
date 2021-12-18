@@ -22,6 +22,12 @@
     this->append(") ");         \
   } while (0)
 
+#define RPAD_WS_BLOCK(block) \
+  do {                       \
+    block;                   \
+    this->append(" ");       \
+  } while (0)
+
 void printer::pprint(Expr exp, padding pad = padding::none) {
   // TODO: this function should use some sort of formatted-string
   switch (exp.kind()) {
@@ -55,8 +61,9 @@ void printer::print_cons(Expr exp) {
       break;
     case Expr_kind::if_:
       PAREN_BLOCK(this->append("if"_sv, padding::right);
-                  this->pprint(CADR(exp)); this->pprint(CADDR(exp));
-                  this->pprint(CADDDR(exp)););
+                  RPAD_PAREN_BLOCK(this->pprint(CADR(exp)));
+                  RPAD_WS_BLOCK(this->pprint(CADDR(exp))); this->pprint(
+                      CADDDR(exp)););  // TODO: parse else with print_block
       break;
     case Expr_kind::lambda:
       PAREN_BLOCK(this->append("lambda"_sv, padding::right);
