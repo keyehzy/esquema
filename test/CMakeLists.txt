@@ -4,6 +4,7 @@ add_executable(
   esquema-test
   test-level1.cpp
   test-level2.cpp
+  test-mit-reference.cpp
 )
 target_include_directories(esquema-test PRIVATE .)
 target_link_libraries(

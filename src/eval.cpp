@@ -7,6 +7,7 @@
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
   this->populate_env();
+  this->push_scope(&m_initial_env);
   m_value = this->eval(m_original_value);
 };
 
@@ -31,11 +32,11 @@ Expr evaluator::eval(Expr exp) {
         }
       case Expr_kind::lambda:
         return Expr(Procedure::proc(/*params=*/CADR(exp), /*body=*/CDDR(exp),
-                                    m_extended_env));
+                                    *this->get_scope()));
       case Expr_kind::named_lambda:
         return Expr(Procedure::proc(/*symbol=*/CAADR(exp).atom(),
                                     /*params=*/CDADR(exp), /*body=*/CDDR(exp),
-                                    m_extended_env));
+                                    *this->get_scope()));
       case Expr_kind::define:
         return this->eval_define(exp);
       case Expr_kind::begin:
@@ -56,19 +57,18 @@ Expr evaluator::eval(Expr exp) {
 Expr evaluator::eval_define(Expr exp) {
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
-    Expr baked_named_lambda =
-        Expr(Procedure::proc(variable.atom(), params, body, m_extended_env));
+    Expr baked_named_lambda = Expr(
+        Procedure::proc(variable.atom(), params, body, *this->get_scope()));
     Expr try_set = this->set(variable.atom(), baked_named_lambda);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
-    return this->bind_variable_in_current_env(variable.atom(),
-                                              baked_named_lambda);
+    return this->bind_variable_in_current_env(variable, baked_named_lambda);
   } else {
     Expr variable = CADR(exp), expression = eval(CDDR(exp));
     Expr try_set = this->set(variable.atom(), expression);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
-    return this->bind_variable_in_current_env(variable.atom(), expression);
+    return this->bind_variable_in_current_env(variable, expression);
   }
 }
 
@@ -89,17 +89,16 @@ Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
     return fn_exp.proc()->native_fn()(args);
   case procedure_kind::named_lambda:
   case procedure_kind::lambda: {
-    Env copy_env = m_extended_env;
-    m_extended_env = this->join(copy_env, fn_exp.proc()->env());
-    // TODO: bound checking
-    // TODO: flatten proc()->params() so that we get rid of this non-sense
-    Expr head = fn_exp.proc()->params();
+    this->push_scope(&fn_exp.proc()->env());
+    Expr head = fn_exp.proc()->params();  // TODO: flatten proc()->params() so
+                                          // that we get rid of this non-sense
     for (int index = 0; head.kind() == Expr_kind::cons; index++) {
-      this->bind_variable_in_current_env(CAR(head).atom(), args[index]);
+      this->bind_variable_in_current_env(CAR(head),
+                                         args[index]);  // TODO: bound checking
       head = CDR(head);
     }
     Expr result = this->eprogn(fn_exp.proc()->body());
-    m_extended_env = copy_env;
+    this->pop_scope();
     return result;
   }
   }
@@ -133,29 +132,46 @@ Expr evaluator::eval_atom(Expr exp) {
 }
 
 Expr evaluator::set(Atom symbol, Expr new_val) {
-  for (auto& [key, val] : m_extended_env) {
-    if (symbol == key) {
-      val = new_val;
-      return val;
+  // Section (2.5) MIT-Scheme Reference:
+  // If expression is specified, evaluates expression and stores the resulting
+  // value in the location to which variable is bound. If expression is omitted,
+  // variable is altered to be unassigned; a subsequent reference to such a
+  // variable is an error. In either case, the value of the set! expression is
+  // unspecified.
+  // TODO: unassgined state for variable
+  // TODO: unspecified value for unassigned variable
+
+  // Variable must be bound either in some region enclosing the set! expression,
+  // or at the top level. However, variable is permitted to be unassigned when
+  // the set! form is entered.
+  for (Env* env : m_scope_collection) {
+    for (auto& [key, val] : *env) {
+      if (symbol == key) {
+        val = new_val;
+        return val;
+      }
     }
   }
   return Expr::err();  // set! on an unbound variable
 }
 
 Expr evaluator::lookup_symbol(Expr symbol) {
-  for (auto& [key, val] : m_extended_env) {
+  for (Env* env : m_scope_collection) {
+    for (auto& [key, val] : *env) {
+      if (symbol.atom() == key) return val;
+    }
+  }
+
+  for (auto& [key, val] : m_protected_env) {
     if (symbol.atom() == key) return val;
   }
-  for (auto& [key, val] : m_initial_env) {
-    if (symbol.atom() == key) return val;
-  }
+
   return symbol;  // autoquote
 }
 
 void evaluator::populate_env() {
   auto set_native_fn = [&](Atom symbol, NativeFn fn) {
-    m_initial_env.emplace_back(
-        symbol, Expr(Procedure::proc(symbol, fn, m_extended_env)));
+    m_protected_env.emplace_back(symbol, Expr(Procedure::proc(symbol, fn)));
   };
   set_native_fn(Atom("+"_sv), NAT_plus);
   set_native_fn(Atom("-"_sv), NAT_minus);
@@ -165,13 +181,19 @@ void evaluator::populate_env() {
 }
 
 // TODO: We need to differenciete between nothing and nil
-Expr evaluator::bind_variable_in_current_env(Atom symbol, Expr value) {
-  m_extended_env.emplace_back(symbol, value);
-  return value;
+Expr evaluator::bind_variable_in_current_env(Expr symbol, Expr value) {
+  this->get_scope()->emplace_back(symbol.atom(), value);
+  return symbol;
 }
 
-Env evaluator::join(const Env& dst, const Env& src) {
-  Env new_env = dst;
-  for (const auto& sv : src) new_env.push_back(sv);
-  return new_env;
+void evaluator::extend(Env& dst, const Env& src) {
+  for (const auto& sv : src) {
+    dst.push_back(sv);
+  }
 }
+
+Env* evaluator::get_scope() { return m_scope_collection.back(); }
+
+void evaluator::push_scope(Env* env) { m_scope_collection.push_back(env); }
+
+void evaluator::pop_scope() { m_scope_collection.pop_back(); }

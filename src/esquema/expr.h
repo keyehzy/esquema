@@ -124,11 +124,10 @@ class Procedure {
         m_params(params),
         m_body(body),
         m_env(env){};
-  Procedure(Atom symbol, NativeFn native_fn, Env env)
+  Procedure(Atom symbol, NativeFn native_fn)
       : m_symbol(symbol),
         m_kind(procedure_kind::native),
-        m_native_fn(native_fn),
-        m_env(env){};
+        m_native_fn(native_fn){};
 
   static Procedure* proc(Expr params, Expr body, Env env) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
@@ -142,9 +141,9 @@ class Procedure {
     return proc;
   }
 
-  static Procedure* proc(Atom symbol, NativeFn native_fn, Env env) {
+  static Procedure* proc(Atom symbol, NativeFn native_fn) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(symbol, native_fn, env);
+    *proc = Procedure(symbol, native_fn);
     return proc;
   }
 

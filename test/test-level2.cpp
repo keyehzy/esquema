@@ -88,4 +88,10 @@ TEST(test, level2) {
 
   // Testing define (second form)
   { EXPECT_EQ(pprint("(begin (define (f x) x) (f 1))"_sv), "1"_sv); };
+
+  // Testing define (closures)
+  {
+    EXPECT_EQ(pprint("(begin (define (foo x y) (lambda (x) x)) (foo x y))"_sv),
+              "(closure ((x . x) (y . y) t) (x) x)"_sv);
+  };
 }

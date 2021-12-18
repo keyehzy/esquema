@@ -19,13 +19,18 @@ class evaluator {
   Expr value() const;
   Expr invoke(Expr, std::vector<Expr>);
   std::vector<Expr> eval_list(Expr);
-  Expr bind_variable_in_current_env(Atom, Expr);
+  Expr bind_variable_in_current_env(Expr, Expr);
 
-  Env join(const Env&, const Env&);
+  void extend(Env &, const Env &);
+
+  Env *get_scope();
+  void push_scope(Env *);
+  void pop_scope();
 
  private:
   Env m_initial_env;
-  Env m_extended_env;
+  Env m_protected_env;
+  std::vector<Env *> m_scope_collection;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;

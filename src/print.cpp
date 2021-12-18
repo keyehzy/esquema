@@ -125,15 +125,19 @@ void printer::print_closure(Expr lambda) {
   if (lambda.proc()->kind() == procedure_kind::named_lambda)
     this->append(lambda.proc()->symbol().as_string(), padding::right);
 
-  RPAD_PAREN_BLOCK(
-      if(lambda.proc()->env().empty())
-        this->append("t"_sv););
+  Env env = lambda.proc()->env();
+
+  RPAD_PAREN_BLOCK(for (auto& [key, val]
+                        : env) {
+    RPAD_PAREN_BLOCK(this->append(key.as_string());
+                     this->append(".", padding::both); this->pprint(val););
+  } this->append("t"_sv););
 
   Expr params = lambda.proc()->params();
   Expr body = lambda.proc()->body();
 
   if (params.kind() == Expr_kind::nil) {
-    this->append("nil"_sv, padding::right);
+    this->append("()"_sv, padding::right);
   } else if (CDR(params).kind() == Expr_kind::nil) {
     RPAD_PAREN_BLOCK(this->pprint(params));
   } else {
