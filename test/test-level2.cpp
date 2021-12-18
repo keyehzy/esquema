@@ -112,4 +112,20 @@ TEST(test, if_statement) {
   { EXPECT_EQ(pprint("(if (> 2 3) 'yes 'no)"_sv), "no"_sv); }
   { EXPECT_EQ(pprint("(if (> 3 2) (- 3 2) (+ 3 2))"_sv), "1"_sv); }
 }
+
+TEST(test, examples) {
+  {
+    EXPECT_EQ(pprint("(lambda (x) (+ x x))"_sv),
+              "(closure (t) (x) (+ x x))"_sv);
+  }
+  { EXPECT_EQ(pprint("((lambda (x) (+ x x)) 4)"_sv), "8"_sv); }
+  {
+    EXPECT_EQ(
+        pprint(
+            "(begin (define reverse-subtract (lambda (x y) (- y x))) (reverse-subtract 7 10))"_sv),
+        "3"_sv);
+  }
+  // TODO: let
+  // { EXPECT_EQ(pprint("(begin (define foo (let ((x 4)) (lambda (y) (+ x y))))
+  // (foo 6))"_sv), "10"_sv); }
 }
