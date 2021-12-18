@@ -111,6 +111,8 @@ TEST(test, if_statement) {
   { EXPECT_EQ(pprint("(if (> 3 2) 'yes 'no)"_sv), "yes"_sv); }
   { EXPECT_EQ(pprint("(if (> 2 3) 'yes 'no)"_sv), "no"_sv); }
   { EXPECT_EQ(pprint("(if (> 3 2) (- 3 2) (+ 3 2))"_sv), "1"_sv); }
+  { EXPECT_EQ(pprint("((if #f = *) 3 4)"_sv), "12"_sv); }
+  { EXPECT_EQ(pprint("((if #t = *) 3 4)"_sv), "#f"_sv); }
 }
 
 TEST(test, examples) {

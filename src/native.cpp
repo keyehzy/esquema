@@ -101,6 +101,19 @@ Expr NAT_binary_conditional_operation_double(
   return Expr(result);
 }
 
+Expr NAT_eq(std::vector<Expr> exps) {
+  Atom a0 = exps[0].atom(), a1 = exps[1].atom();
+  if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
+    return NAT_binary_conditional_operation_int(
+        a0, a1, [](int a, int b) -> bool { return a == b; });
+  } else if (a0.type() == token_t::float_ || a1.type() == token_t::float_) {
+    return NAT_binary_conditional_operation_double(
+        a0, a1, [](double a, double b) -> bool { return a == b; });
+  } else {
+    return Expr::err();
+  }
+}
+
 Expr NAT_gt(std::vector<Expr> exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
