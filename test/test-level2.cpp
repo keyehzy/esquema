@@ -7,15 +7,6 @@ string pprint(string_view sv) {
 }
 
 TEST(test, level2) {
-  // Testing begin
-  { EXPECT_EQ(pprint("(begin 1 2 3)"_sv), "3"_sv); }
-  { EXPECT_EQ(pprint("(begin 1 2)"_sv), "2"_sv); }
-  { EXPECT_EQ(pprint("(begin 1)"_sv), "1"_sv); }
-
-  // Testing set!
-  // { EXPECT_EQ(pprint("(begin (set! x 42) x)"_sv), "42"_sv); }
-  // { EXPECT_EQ(pprint("(begin (set! x 42) y)"_sv), "y"_sv); }  // autoquote
-
   // Testing binary operation
   { EXPECT_EQ(pprint("(+ 1 2)"_sv), "3"_sv); }
   { EXPECT_EQ(pprint("(- 1 2)"_sv), "-1"_sv); }
@@ -79,6 +70,21 @@ TEST(test, level2) {
     EXPECT_EQ(pprint("(begin (define (foo x y) (lambda (x) x)) (foo x y))"_sv),
               "(closure ((x . x) (y . y) t) (x) x)"_sv);
   };
+}
+
+TEST(test, begin) {
+  // Testing begin
+  { EXPECT_EQ(pprint("(begin 1 2 3)"_sv), "3"_sv); }
+  { EXPECT_EQ(pprint("(begin 1 2)"_sv), "2"_sv); }
+  { EXPECT_EQ(pprint("(begin 1)"_sv), "1"_sv); }
+  { EXPECT_EQ(pprint("(begin (define x 0) (set! x 5) (+ x 1))"_sv), "6"_sv); }
+  { EXPECT_EQ(pprint("(begin (define x 0) (set! x 5) (+ x 1))"_sv), "6"_sv); }
+  {
+    EXPECT_EQ(
+        pprint(
+            "(begin (define count 0) (set! count (+ count 1)) (* count 3))"_sv),
+        "3"_sv);
+  }
 }
 
 TEST(test, quote) {

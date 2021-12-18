@@ -6,16 +6,40 @@
 
 Expr NAT_binary_operation_int(Atom a0, Atom a1,
                               std::function<int(int, int)> operation) {
-  int a0_integer = std::strtol(a0.as_string().data(), NULL, 10);
-  int a1_integer = std::strtol(a1.as_string().data(), NULL, 10);
+  int a0_integer, a1_integer;
+
+  if (a0.is_evaluated) {
+    a0_integer = a0.as_int();
+  } else {
+    a0_integer = std::strtol(a0.as_string().data(), NULL, 10);
+  }
+
+  if (a1.is_evaluated) {
+    a1_integer = a1.as_int();
+  } else {
+    a1_integer = std::strtol(a1.as_string().data(), NULL, 10);
+  }
+
   int result = operation(a0_integer, a1_integer);
   return Expr(result);
 }
 
 Expr NAT_binary_operation_double(
     Atom a0, Atom a1, std::function<double(double, double)> operation) {
-  double a0_float = std::strtod(a0.as_string().data(), NULL);
-  double a1_float = std::strtod(a1.as_string().data(), NULL);
+  double a0_float, a1_float;
+
+  if (a0.is_evaluated) {
+    a0_float = a0.as_float();
+  } else {
+    a0_float = std::strtod(a0.as_string().data(), NULL);
+  }
+
+  if (a1.is_evaluated) {
+    a1_float = a1.as_float();
+  } else {
+    a1_float = std::strtod(a1.as_string().data(), NULL);
+  }
+
   double result = operation(a0_float, a1_float);
   return Expr(result);
 }
@@ -87,16 +111,40 @@ Expr NAT_mod(std::vector<Expr> exps) {
 
 Expr NAT_binary_conditional_operation_int(
     Atom a0, Atom a1, std::function<bool(int, int)> operation) {
-  int a0_integer = std::strtol(a0.as_string().data(), NULL, 10);
-  int a1_integer = std::strtol(a1.as_string().data(), NULL, 10);
+  int a0_integer, a1_integer;
+
+  if (a0.is_evaluated) {
+    a0_integer = a0.as_int();
+  } else {
+    a0_integer = std::strtol(a0.as_string().data(), NULL, 10);
+  }
+
+  if (a1.is_evaluated) {
+    a1_integer = a1.as_int();
+  } else {
+    a1_integer = std::strtol(a1.as_string().data(), NULL, 10);
+  }
+
   bool result = operation(a0_integer, a1_integer);
   return Expr(result);
 }
 
 Expr NAT_binary_conditional_operation_double(
     Atom a0, Atom a1, std::function<bool(double, double)> operation) {
-  double a0_float = std::strtod(a0.as_string().data(), NULL);
-  double a1_float = std::strtod(a1.as_string().data(), NULL);
+  double a0_float, a1_float;
+
+  if (a0.is_evaluated) {
+    a0_float = a0.as_float();
+  } else {
+    a0_float = std::strtod(a0.as_string().data(), NULL);
+  }
+
+  if (a1.is_evaluated) {
+    a1_float = a1.as_float();
+  } else {
+    a1_float = std::strtod(a1.as_string().data(), NULL);
+  }
+
   bool result = operation(a0_float, a1_float);
   return Expr(result);
 }
