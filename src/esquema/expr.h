@@ -90,11 +90,11 @@ class Expr {
 class Cons {
  public:
   Cons() = delete;
+  Cons(Expr head, Expr rest) : car(head), cdr(rest){};
 
   static Cons* cons(Expr head, Expr rest) {
     Cons* cons = (Cons*)malloc(sizeof(Cons));
-    cons->car = head;
-    cons->cdr = rest;
+    new (cons) Cons(head, rest);
     return cons;
   }
 
@@ -136,19 +136,19 @@ class Procedure {
 
   static Procedure* proc(Expr params, Expr body, Env env) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(params, body, env);
+    new (proc) Procedure(params, body, env);
     return proc;
   }
 
   static Procedure* proc(Atom symbol, Expr params, Expr body, Env env) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(symbol, params, body, env);
+    new (proc) Procedure(symbol, params, body, env);
     return proc;
   }
 
   static Procedure* proc(Atom symbol, NativeFn native_fn) {
     Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    *proc = Procedure(symbol, native_fn);
+    new (proc) Procedure(symbol, native_fn);
     return proc;
   }
 
