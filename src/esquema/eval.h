@@ -20,6 +20,8 @@ class evaluator {
   Expr invoke(Expr, std::vector<Expr>);
   std::vector<Expr> eval_list(Expr);
   Expr bind_variable_in_current_env(Expr, Expr);
+  Expr variables_from_init_list(Expr);
+  Expr inits_from_init_list(Expr);
 
   void extend(Env &, const Env &);
 
@@ -37,7 +39,9 @@ class evaluator {
 };
 
 inline Expr CAR(Expr x) { return x.cons()->car; }
+inline Expr CAAR(Expr x) { return x.cons()->car.cons()->car; }
 inline Expr CADR(Expr x) { return x.cons()->cdr.cons()->car; }
+inline Expr CADAR(Expr x) { return x.cons()->car.cons()->cdr.cons()->car; }
 inline Expr CAADR(Expr x) { return x.cons()->cdr.cons()->car.cons()->car; }
 inline Expr CADDR(Expr x) { return x.cons()->cdr.cons()->cdr.cons()->car; }
 inline Expr CADDDR(Expr x) {

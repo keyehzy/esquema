@@ -32,6 +32,8 @@ Expr parser::parse_head() {
     if (quoted.kind() == Expr_kind::err) return quoted;
     return Expr(Cons::cons(quote_exp, Expr(Cons::cons(quoted, Expr::nil()))));
   }
+  case token_t::let:
+    return this->parse_single_token(Expr_kind::let);
   case token_t::if_:
     return this->parse_single_token(Expr_kind::if_);
   case token_t::lambda:

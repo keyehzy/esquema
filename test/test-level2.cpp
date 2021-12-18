@@ -137,3 +137,15 @@ TEST(test, examples) {
   // { EXPECT_EQ(pprint("(begin (define foo (let ((x 4)) (lambda (y) (+ x y))))
   // (foo 6))"_sv), "10"_sv); }
 }
+
+TEST(test, let) {
+  { EXPECT_EQ(pprint("(let ((x 1)) x)"_sv), "1"_sv); }
+  { EXPECT_EQ(pprint("(let ((x 1) (y 2)) x)"_sv), "1"_sv); }
+  { EXPECT_EQ(pprint("(let ((x 1) (y 2)) y)"_sv), "2"_sv); }
+  {
+    EXPECT_EQ(
+        pprint(
+            "(let ((x 2) (y 3)) (let ((foo (lambda (z) (+ x (+ y z)))) (x 7)) (foo 4)))"_sv),
+        "9"_sv);
+  }
+}

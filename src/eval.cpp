@@ -38,6 +38,15 @@ Expr evaluator::eval(Expr exp) {
         return Expr(Procedure::proc(/*symbol=*/CAADR(exp).atom(),
                                     /*params=*/CDADR(exp), /*body=*/CDDR(exp),
                                     *this->get_scope()));
+      case Expr_kind::let: {
+        Expr variable_inits = CADR(exp);
+        Expr variables = this->variables_from_init_list(variable_inits);
+        Expr initializers = this->inits_from_init_list(variable_inits);
+        Expr baked_lambda = Expr(Procedure::proc(
+            /*params=*/variables, /*body=*/CDDR(exp), *this->get_scope()));
+        return this->eval(Expr(Cons::cons(baked_lambda, initializers)));
+      }
+
       case Expr_kind::define:
         return this->eval_define(exp);
       case Expr_kind::begin:
@@ -48,6 +57,7 @@ Expr evaluator::eval(Expr exp) {
         return this->invoke(eval(CAR(exp)), this->eval_list(CDR(exp)));
       }
     }
+    break;
   case Expr_kind::procedure:
   case Expr_kind::true_:
   case Expr_kind::false_:
@@ -56,6 +66,18 @@ Expr evaluator::eval(Expr exp) {
   default:
     return Expr::err();
   }
+}
+
+Expr evaluator::variables_from_init_list(Expr exp) {
+  // TODO: check pretty much everything (if CAR(exp) is a variable, for ex.)
+  if (exp.kind() == Expr_kind::nil) return exp;
+  return Expr(Cons::cons(CAAR(exp), this->variables_from_init_list(CDR(exp))));
+}
+
+Expr evaluator::inits_from_init_list(Expr exp) {
+  // TODO: check pretty much everything (if CAR(exp) is a variable, for ex.)
+  if (exp.kind() == Expr_kind::nil) return exp;
+  return Expr(Cons::cons(CADAR(exp), this->inits_from_init_list(CDR(exp))));
 }
 
 // TODO: this the second form of *define*, implement the first one. See sec. 2.4

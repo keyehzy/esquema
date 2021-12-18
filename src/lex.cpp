@@ -175,6 +175,8 @@ end:
     t.type = token_t::define;
   } else if (t.as_string() == "quote"_sv) {
     t.type = token_t::quote;
+  } else if (t.as_string() == "let"_sv) {
+    t.type = token_t::let;
   }
 
   return t;

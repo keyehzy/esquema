@@ -19,6 +19,7 @@ enum class token_t {
   lambda,
   named_lambda,
   left_paren,
+  let,
   quote,
   quote_abbrev,
   right_paren,

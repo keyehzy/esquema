@@ -47,6 +47,7 @@ enum Expr_kind {
   false_,
   if_,
   lambda,
+  let,
   named_lambda,
   procedure,
   quote,
