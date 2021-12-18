@@ -18,6 +18,7 @@ Expr parser::parse_head() {
   case token_t::symbol:
   case token_t::float_:
   case token_t::string:
+  case token_t::character:
     return this->parse_atom();
   case token_t::left_paren:
     this->skip();

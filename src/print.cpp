@@ -37,6 +37,12 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
   case Expr_kind::cons:
     this->print_cons(exp);
     break;
+  case Expr_kind::true_:
+    this->append("#t"_sv, pad);
+    break;
+  case Expr_kind::false_:
+    this->append("#f"_sv, pad);
+    break;
   case Expr_kind::nil:
     this->append("()"_sv, pad);
     break;

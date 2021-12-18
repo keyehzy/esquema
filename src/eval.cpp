@@ -120,10 +120,11 @@ Expr evaluator::eprogn(Expr exp) {
 }
 
 Expr evaluator::eval_atom(Expr exp) {
-  switch (exp.atom().token_().type) {
+  switch (exp.atom().token_().type) { // TODO: maybe we can evaluate these here?
+  case token_t::character:
+  case token_t::float_:
   case token_t::integer:
   case token_t::string:
-  case token_t::float_:
     return exp;
   case token_t::symbol:
     return this->lookup_symbol(exp);

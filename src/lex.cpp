@@ -52,7 +52,8 @@ token lexer::parse_character() {
   switch (it[0]) {
   case '\\':
     ++it;
-    return token(token_t::character, begin, it);
+    m_input = it + 1;
+    return token(token_t::character, begin, it + 1);
   // TODO: implement
   // https://groups.csail.mit.edu/mac/ftpdir/scheme-7.4/doc-html/scheme_6.html
   case 't':

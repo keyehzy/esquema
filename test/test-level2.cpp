@@ -85,7 +85,18 @@ TEST(test, quote) {
   // Testing quote of lists
   { EXPECT_EQ(pprint("(quote a)"_sv), "a"_sv); }
   { EXPECT_EQ(pprint("(quote (+ 1 2))"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("'a"_sv), "a"_sv); }
   { EXPECT_EQ(pprint("'(+ 1 2)"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("'(quote a)"_sv), "(quote a)"_sv); }
+  { EXPECT_EQ(pprint("''a"_sv), "(quote a)"_sv); }
+  { EXPECT_EQ(pprint("'\"abc\""_sv), "\"abc\""_sv); }
+  { EXPECT_EQ(pprint("\"abc\""_sv), "\"abc\""_sv); }
+  { EXPECT_EQ(pprint("'145932"_sv), "145932"_sv); }
+  { EXPECT_EQ(pprint("145932"_sv), "145932"_sv); }
+  { EXPECT_EQ(pprint("'#t"_sv), "#t"_sv); }
+  { EXPECT_EQ(pprint("#t"_sv), "#t"_sv); }
+  { EXPECT_EQ(pprint(R"('#\a)"), R"(#\a)"); }
+  { EXPECT_EQ(pprint(R"(#\a)"), R"(#\a)"); }
   { EXPECT_EQ(pprint("'()"_sv), "()"_sv); }
   { EXPECT_EQ(pprint("'( )"_sv), "()"_sv); }
   { EXPECT_EQ(pprint("'(nil)"_sv), "nil"_sv); }

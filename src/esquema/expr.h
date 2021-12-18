@@ -41,6 +41,7 @@ enum Expr_kind {
   cons,
 
   begin,
+  character,
   define,
   function,
   false_,
