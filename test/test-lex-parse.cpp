@@ -97,7 +97,4 @@ TEST(test, level1) {
   // { EXPECT_EQ(pprint_quoted("(,(1 2 3))"), "((comma ((1 (2 3)) nil)))"); }
   // { EXPECT_EQ(pprint_quoted("(`(1 ,a 3))"), "((1 ((comma (a nil)) 3)))"); }
   // { EXPECT_EQ(pprint_quoted("(,@(1 2 3))"), "((commaat ((1 (2 3)) nil)))"); }
-
-  // Testing lambdas
-  { EXPECT_EQ(pprint_quoted("(lambda (x) x)"), "(lambda (x) x)"); }
 }
