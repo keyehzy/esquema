@@ -48,8 +48,13 @@ Expr evaluator::eval(Expr exp) {
         return this->invoke(eval(CAR(exp)), this->eval_list(CDR(exp)));
       }
     }
-  default:
+  case Expr_kind::procedure:
+  case Expr_kind::true_:
+  case Expr_kind::false_:
+  case Expr_kind::nil:
     return exp;
+  default:
+    return Expr::err();
   }
 }
 
@@ -103,6 +108,7 @@ Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
     return result;
   }
   }
+  // CHECK NOT REACHED
 }
 
 Expr evaluator::eprogn(Expr exp) {
@@ -120,8 +126,8 @@ Expr evaluator::eprogn(Expr exp) {
 }
 
 Expr evaluator::eval_atom(Expr exp) {
-  switch (exp.atom().token_().type) { // TODO: maybe we can evaluate these here?
-  case token_t::character:
+  switch (exp.atom().token_().type) {
+  case token_t::character:  // TODO: maybe we can evaluate these here?
   case token_t::float_:
   case token_t::integer:
   case token_t::string:
