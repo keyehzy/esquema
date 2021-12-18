@@ -18,10 +18,6 @@ TEST(test, level2) {
     EXPECT_EQ(pprint("'  ( +   1   (+   2 3   )   )  "_sv), "(+ 1 (+ 2 3))"_sv);
   }
 
-  // Testing if
-  { EXPECT_EQ(pprint("(if #t 2 3)"_sv), "2"_sv); }
-  { EXPECT_EQ(pprint("(if #f 2 3)"_sv), "3"_sv); }
-
   // Testing begin
   { EXPECT_EQ(pprint("(begin 1 2 3)"_sv), "3"_sv); }
   { EXPECT_EQ(pprint("(begin 1 2)"_sv), "2"_sv); }
@@ -94,4 +90,14 @@ TEST(test, level2) {
     EXPECT_EQ(pprint("(begin (define (foo x y) (lambda (x) x)) (foo x y))"_sv),
               "(closure ((x . x) (y . y) t) (x) x)"_sv);
   };
+}
+
+TEST(test, if_statement) {
+  // Testing if
+  { EXPECT_EQ(pprint("(if #t 2 3)"_sv), "2"_sv); }
+  { EXPECT_EQ(pprint("(if #f 2 3)"_sv), "3"_sv); }
+  { EXPECT_EQ(pprint("(if (> 3 2) 'yes 'no)"_sv), "yes"_sv); }
+  { EXPECT_EQ(pprint("(if (> 2 3) 'yes 'no)"_sv), "no"_sv); }
+  { EXPECT_EQ(pprint("(if (> 3 2) (- 3 2) (+ 3 2))"_sv), "1"_sv); }
+}
 }

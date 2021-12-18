@@ -8,3 +8,5 @@ Expr NAT_minus(std::vector<Expr> exps);
 Expr NAT_times(std::vector<Expr> exps);
 Expr NAT_div(std::vector<Expr> exps);
 Expr NAT_mod(std::vector<Expr> exps);
+Expr NAT_gt(std::vector<Expr> exps);
+Expr NAT_lt(std::vector<Expr> exps);

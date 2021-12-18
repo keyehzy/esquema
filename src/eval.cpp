@@ -178,6 +178,8 @@ void evaluator::populate_env() {
   set_native_fn(Atom("*"_sv), NAT_times);
   set_native_fn(Atom("/"_sv), NAT_div);
   set_native_fn(Atom("%"_sv), NAT_mod);
+  set_native_fn(Atom(">"_sv), NAT_gt);
+  set_native_fn(Atom("<"_sv), NAT_lt);
 }
 
 // TODO: We need to differenciete between nothing and nil
