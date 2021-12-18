@@ -23,6 +23,7 @@ Expr evaluator::eval(Expr exp) {
     } else {
       switch (CAR(exp).kind()) {
       case Expr_kind::quote:
+      case Expr_kind::quote_abbrev:
         return CADR(exp);
       case Expr_kind::if_:
         if (eval(CADR(exp)).kind() != Expr_kind::false_) {

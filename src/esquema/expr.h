@@ -49,6 +49,7 @@ enum Expr_kind {
   named_lambda,
   procedure,
   quote,
+  quote_abbrev,
   set,
   true_,
 };

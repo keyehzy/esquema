@@ -7,17 +7,6 @@ string pprint(string_view sv) {
 }
 
 TEST(test, level2) {
-  // Testing quote of lists
-  { EXPECT_EQ(pprint("'(+ 1 2)"_sv), "(+ 1 2)"_sv); }
-  { EXPECT_EQ(pprint("'()"_sv), "()"_sv); }
-  { EXPECT_EQ(pprint("'( )"_sv), "()"_sv); }
-  { EXPECT_EQ(pprint("'(nil)"_sv), "nil"_sv); }
-  { EXPECT_EQ(pprint("'((3 4))"_sv), "(3 4)"_sv); }
-  { EXPECT_EQ(pprint("'(+ 1 (+ 2 3))"_sv), "(+ 1 (+ 2 3))"_sv); }
-  {
-    EXPECT_EQ(pprint("'  ( +   1   (+   2 3   )   )  "_sv), "(+ 1 (+ 2 3))"_sv);
-  }
-
   // Testing begin
   { EXPECT_EQ(pprint("(begin 1 2 3)"_sv), "3"_sv); }
   { EXPECT_EQ(pprint("(begin 1 2)"_sv), "2"_sv); }
@@ -90,6 +79,18 @@ TEST(test, level2) {
     EXPECT_EQ(pprint("(begin (define (foo x y) (lambda (x) x)) (foo x y))"_sv),
               "(closure ((x . x) (y . y) t) (x) x)"_sv);
   };
+}
+
+TEST(test, quote) {
+  // Testing quote of lists
+  { EXPECT_EQ(pprint("(quote a)"_sv), "a"_sv); }
+  { EXPECT_EQ(pprint("(quote (+ 1 2))"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("'(+ 1 2)"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("'()"_sv), "()"_sv); }
+  { EXPECT_EQ(pprint("'( )"_sv), "()"_sv); }
+  { EXPECT_EQ(pprint("'(nil)"_sv), "nil"_sv); }
+  { EXPECT_EQ(pprint("'((3 4))"_sv), "(3 4)"_sv); }
+  { EXPECT_EQ(pprint("'(+ 1 (+ 2 3))"_sv), "(+ 1 (+ 2 3))"_sv); }
 }
 
 TEST(test, if_statement) {

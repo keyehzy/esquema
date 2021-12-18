@@ -49,6 +49,7 @@ void printer::print_cons(Expr exp) {
   } else {
     switch (CAR(exp).kind()) {
     case Expr_kind::quote:
+    case Expr_kind::quote_abbrev:
       PAREN_BLOCK(this->append("quote"_sv, padding::right);
                   this->pprint(CADR(exp)););
       break;

@@ -28,7 +28,7 @@ void lexer::parse_current_token() {
     m_last_token = this->parse_single_char_token(token_t::right_paren);
     break;
   case '\'':
-    m_last_token = this->parse_single_char_token(token_t::quote);
+    m_last_token = this->parse_single_char_token(token_t::quote_abbrev);
     break;
   case '\"':
     m_last_token = this->parse_string_literal();
@@ -172,6 +172,8 @@ end:
     t.type = token_t::named_lambda;
   } else if (t.as_string() == "define"_sv) {
     t.type = token_t::define;
+  } else if (t.as_string() == "quote"_sv) {
+    t.type = token_t::quote;
   }
 
   return t;

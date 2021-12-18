@@ -22,8 +22,10 @@ Expr parser::parse_head() {
   case token_t::left_paren:
     this->skip();
     return this->parse_subexpr();
-  case token_t::quote: {
-    Expr quote_exp = this->parse_single_token(Expr_kind::quote);
+  case token_t::quote:
+    return this->parse_single_token(Expr_kind::quote);
+  case token_t::quote_abbrev: {
+    Expr quote_exp = this->parse_single_token(Expr_kind::quote_abbrev);
     Expr quoted = this->parse_head();
     // TODO: check for errors
     if (quoted.kind() == Expr_kind::err) return quoted;
