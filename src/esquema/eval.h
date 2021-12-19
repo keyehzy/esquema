@@ -17,8 +17,8 @@ class evaluator {
   Expr eprogn(Expr);
   Expr set(Atom, Expr);
   Expr value() const;
-  Expr invoke(Expr, std::vector<Expr>);
-  std::vector<Expr> eval_list(Expr);
+  Expr invoke(Expr, List);
+  List eval_list(Expr);
   Expr bind_variable_in_current_env(Expr, Expr);
   Expr variables_from_init_list(Expr);
   Expr inits_from_init_list(Expr);

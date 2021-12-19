@@ -32,17 +32,17 @@ Expr evaluator::eval(Expr exp) {
           return eval(CADDDR(exp));
         }
       case Expr_kind::lambda:
-        return Expr(Procedure::proc(/*params=*/CADR(exp), /*body=*/CDDR(exp),
-                                    *this->get_scope()));
+        return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp),
+                                  *this->get_scope()));
       case Expr_kind::named_lambda:
-        return Expr(Procedure::proc(/*symbol=*/CAADR(exp).atom(),
-                                    /*params=*/CDADR(exp), /*body=*/CDDR(exp),
-                                    *this->get_scope()));
+        return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
+                                  /*params=*/CDADR(exp), /*body=*/CDDR(exp),
+                                  *this->get_scope()));
       case Expr_kind::let: {
         Expr variable_inits = CADR(exp);
         Expr variables = this->variables_from_init_list(variable_inits);
         Expr initializers = this->inits_from_init_list(variable_inits);
-        Expr baked_lambda = Expr(Procedure::proc(
+        Expr baked_lambda = Expr(new Procedure(
             /*params=*/variables, /*body=*/CDDR(exp), *this->get_scope()));
         return this->eval(Expr(Cons::cons(baked_lambda, initializers)));
       }
@@ -85,8 +85,8 @@ Expr evaluator::inits_from_init_list(Expr exp) {
 Expr evaluator::eval_define(Expr exp) {
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
-    Expr baked_named_lambda = Expr(
-        Procedure::proc(variable.atom(), params, body, *this->get_scope()));
+    Expr baked_named_lambda =
+        Expr(new Procedure(variable.atom(), params, body, *this->get_scope()));
     Expr try_set = this->set(variable.atom(), baked_named_lambda);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
@@ -100,9 +100,9 @@ Expr evaluator::eval_define(Expr exp) {
   }
 }
 
-std::vector<Expr> evaluator::eval_list(Expr exp) {
+List evaluator::eval_list(Expr exp) {
   Expr head = exp;
-  std::vector<Expr> list;
+  List list;
   while (head.kind() == Expr_kind::cons) {
     list.push_back(eval(CAR(head)));
     head = CDR(head);
@@ -110,7 +110,7 @@ std::vector<Expr> evaluator::eval_list(Expr exp) {
   return list;
 }
 
-Expr evaluator::invoke(Expr fn_exp, std::vector<Expr> args) {
+Expr evaluator::invoke(Expr fn_exp, List args) {
   if (fn_exp.kind() != Expr_kind::procedure) return Expr::err();
   switch (fn_exp.proc()->kind()) {
   case procedure_kind::native:
@@ -201,7 +201,8 @@ Expr evaluator::lookup_symbol(Expr symbol) {
 
 void evaluator::populate_env() {
   auto set_native_fn = [&](Atom symbol, NativeFn fn) {
-    m_protected_env.emplace_back(symbol, Expr(Procedure::proc(symbol, fn)));
+    Expr fn_exp = Expr(new Procedure(symbol, fn));
+    m_protected_env.push_back(symbol_value{symbol, fn_exp});
   };
   set_native_fn(Atom("+"_sv), NAT_plus);
   set_native_fn(Atom("-"_sv), NAT_minus);
@@ -210,7 +211,9 @@ void evaluator::populate_env() {
   set_native_fn(Atom("%"_sv), NAT_mod);
   set_native_fn(Atom("="_sv), NAT_eq);
   set_native_fn(Atom(">"_sv), NAT_gt);
+  set_native_fn(Atom(">="_sv), NAT_ge);
   set_native_fn(Atom("<"_sv), NAT_lt);
+  set_native_fn(Atom("<="_sv), NAT_le);
 }
 
 // TODO: We need to differenciete between nothing and nil

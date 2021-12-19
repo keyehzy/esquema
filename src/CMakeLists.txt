@@ -7,16 +7,20 @@ target_link_libraries(esquema PRIVATE esquema-lib editline)
 
 add_library(
   esquema-lib
-  esquema/lex.h
-  esquema/print.h
-  esquema/parse.h
+  esquema/assert.h
   esquema/eval.h
+  esquema/heap.h
+  esquema/lex.h
   esquema/native.h
+  esquema/parse.h
+  esquema/print.h
 
-  lex.cpp
-  print.cpp
-  parse.cpp
-  native.cpp
+  assert.cpp
   eval.cpp
+  heap.cpp
+  lex.cpp
+  native.cpp
+  parse.cpp
+  print.cpp
 )
 target_include_directories(esquema-lib PUBLIC .)

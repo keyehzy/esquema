@@ -4,6 +4,7 @@ add_executable(
   esquema-test
   test-lex-parse.cpp
   test-level2.cpp
+  test-heap.cpp
 )
 target_include_directories(esquema-test PRIVATE .)
 target_link_libraries(

@@ -1,7 +1,11 @@
 #pragma once
 
+#include "assert.h"
+#include "heap.h"
 #include "token.h"
 #include <vector>
+
+static Heap heap(5 * MiB);
 
 class Atom {
  public:
@@ -94,11 +98,15 @@ class Cons {
   Cons() = delete;
   Cons(Expr head, Expr rest) : car(head), cdr(rest){};
 
-  static Cons* cons(Expr head, Expr rest) {
-    Cons* cons = (Cons*)malloc(sizeof(Cons));
-    new (cons) Cons(head, rest);
-    return cons;
+  static void* operator new(size_t size) {
+    void* block = heap.allocate(size);
+    ESQUEMA_ASSERT(block);
+    return block;
   }
+
+  static void operator delete(void*) {}
+
+  static Cons* cons(Expr head, Expr rest) { return new Cons(head, rest); }
 
   Expr car;
   Expr cdr;
@@ -115,8 +123,9 @@ enum class procedure_kind {
   named_lambda,
 };
 
-typedef Expr (*NativeFn)(std::vector<Expr>);
+typedef std::vector<Expr> List;
 typedef std::vector<symbol_value> Env;
+typedef Expr (*NativeFn)(List);
 
 class Procedure {
  public:
@@ -136,23 +145,13 @@ class Procedure {
         m_kind(procedure_kind::native),
         m_native_fn(native_fn){};
 
-  static Procedure* proc(Expr params, Expr body, Env env) {
-    Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    new (proc) Procedure(params, body, env);
-    return proc;
+  static void* operator new(size_t size) {
+    void* block = heap.allocate(size);
+    ESQUEMA_ASSERT(block);
+    return block;
   }
 
-  static Procedure* proc(Atom symbol, Expr params, Expr body, Env env) {
-    Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    new (proc) Procedure(symbol, params, body, env);
-    return proc;
-  }
-
-  static Procedure* proc(Atom symbol, NativeFn native_fn) {
-    Procedure* proc = (Procedure*)malloc(sizeof(Procedure));
-    new (proc) Procedure(symbol, native_fn);
-    return proc;
-  }
+  static void operator delete(void*) {}
 
   Atom symbol() const { return m_symbol; }
   procedure_kind kind() const { return m_kind; }

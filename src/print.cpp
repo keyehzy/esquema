@@ -1,10 +1,7 @@
 #include "esquema/eval.h"
-#include "esquema/expr.h"
 #include "esquema/lex.h"
-#include "esquema/padded_string.h"
 #include "esquema/parse.h"
 #include "esquema/print.h"
-#include "esquema/string_view.h"
 #include "esquema/token.h"
 #include <iostream>
 

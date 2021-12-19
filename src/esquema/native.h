@@ -3,13 +3,13 @@
 #include "expr.h"
 #include <vector>
 
-Expr NAT_plus(std::vector<Expr> exps);
-Expr NAT_minus(std::vector<Expr> exps);
-Expr NAT_times(std::vector<Expr> exps);
-Expr NAT_div(std::vector<Expr> exps);
-Expr NAT_mod(std::vector<Expr> exps);
-Expr NAT_eq(std::vector<Expr> exps);
-Expr NAT_gt(std::vector<Expr> exps);
-Expr NAT_ge(std::vector<Expr> exps);
-Expr NAT_lt(std::vector<Expr> exps);
-Expr NAT_le(std::vector<Expr> exps);
+Expr NAT_plus(List exps);
+Expr NAT_minus(List exps);
+Expr NAT_times(List exps);
+Expr NAT_div(List exps);
+Expr NAT_mod(List exps);
+Expr NAT_eq(List exps);
+Expr NAT_gt(List exps);
+Expr NAT_ge(List exps);
+Expr NAT_lt(List exps);
+Expr NAT_le(List exps);

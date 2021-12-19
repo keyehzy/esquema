@@ -44,7 +44,7 @@ Expr NAT_binary_operation_double(
   return Expr(result);
 }
 
-Expr NAT_plus(std::vector<Expr> exps) {
+Expr NAT_plus(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_operation_int(a0, a1,
@@ -57,7 +57,7 @@ Expr NAT_plus(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_minus(std::vector<Expr> exps) {
+Expr NAT_minus(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_operation_int(a0, a1,
@@ -70,7 +70,7 @@ Expr NAT_minus(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_times(std::vector<Expr> exps) {
+Expr NAT_times(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_operation_int(a0, a1,
@@ -83,7 +83,7 @@ Expr NAT_times(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_div(std::vector<Expr> exps) {
+Expr NAT_div(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_operation_int(a0, a1,
@@ -96,7 +96,7 @@ Expr NAT_div(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_mod(std::vector<Expr> exps) {
+Expr NAT_mod(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_operation_int(a0, a1,
@@ -149,7 +149,7 @@ Expr NAT_binary_conditional_operation_double(
   return Expr(result);
 }
 
-Expr NAT_eq(std::vector<Expr> exps) {
+Expr NAT_eq(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_conditional_operation_int(
@@ -162,7 +162,7 @@ Expr NAT_eq(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_gt(std::vector<Expr> exps) {
+Expr NAT_gt(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_conditional_operation_int(
@@ -175,7 +175,7 @@ Expr NAT_gt(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_ge(std::vector<Expr> exps) {
+Expr NAT_ge(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_conditional_operation_int(
@@ -188,7 +188,7 @@ Expr NAT_ge(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_lt(std::vector<Expr> exps) {
+Expr NAT_lt(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_conditional_operation_int(
@@ -201,7 +201,7 @@ Expr NAT_lt(std::vector<Expr> exps) {
   }
 }
 
-Expr NAT_le(std::vector<Expr> exps) {
+Expr NAT_le(List exps) {
   Atom a0 = exps[0].atom(), a1 = exps[1].atom();
   if (a0.type() == token_t::integer && a1.type() == token_t::integer) {
     return NAT_binary_conditional_operation_int(
