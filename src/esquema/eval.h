@@ -23,7 +23,6 @@ class evaluator {
   Expr variables_from_init_list(Expr);
   Expr inits_from_init_list(Expr);
 
-  void extend(Env &, const Env &);
 
   Env *get_scope();
   void push_scope(Env *);

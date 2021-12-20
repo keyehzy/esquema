@@ -136,7 +136,7 @@ void printer::print_closure(Expr lambda) {
   if (lambda.proc()->kind() == procedure_kind::named_lambda)
     this->append(lambda.proc()->symbol().as_string(), padding::right);
 
-  Env env = lambda.proc()->env();
+  Env env = lambda.env();
 
   RPAD_PAREN_BLOCK(for (auto& [key, val]
                         : env) {

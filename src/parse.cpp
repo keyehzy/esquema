@@ -9,7 +9,7 @@ Expr parser::parse_program() {
   Expr head = parse_head();
   if (head.kind() == Expr_kind::err) return head;
   Expr rest = parse_program();
-  return Expr(Cons::cons(head, rest));
+  return Expr(new Cons(head, rest));
 }
 
 Expr parser::parse_head() {
@@ -30,7 +30,7 @@ Expr parser::parse_head() {
     Expr quoted = this->parse_head();
     // TODO: check for errors
     if (quoted.kind() == Expr_kind::err) return quoted;
-    return Expr(Cons::cons(quote_exp, Expr(Cons::cons(quoted, Expr::nil()))));
+    return Expr(new Cons(quote_exp, Expr(new Cons(quoted, Expr::nil()))));
   }
   case token_t::let:
     return this->parse_single_token(Expr_kind::let);
@@ -70,7 +70,7 @@ Expr parser::parse_subexpr() {
     Expr head = this->parse_head();
     if (head.kind() == Expr_kind::err) return head;
     Expr rest = this->parse_subexpr();
-    return Expr(Cons::cons(head, rest));
+    return Expr(new Cons(head, rest));
   }
   }
 }

@@ -62,6 +62,8 @@ enum Expr_kind {
 
 class Cons;
 class Procedure;
+struct symbol_value;
+typedef std::vector<symbol_value> Env;
 
 class Expr {
  public:
@@ -75,13 +77,15 @@ class Expr {
       : m_kind(cond ? Expr_kind::true_ : Expr_kind::false_){};
   explicit Expr(Expr_kind kind, Atom atom) : m_kind(kind), m_atom(atom){};
   explicit Expr(Expr_kind kind, Cons* cons) : m_kind(kind), m_cons(cons){};
-  explicit Expr(Procedure* proc) : m_kind(Expr_kind::procedure), m_proc(proc){};
+  explicit Expr(Procedure* proc, Env env)
+      : m_kind(Expr_kind::procedure), m_proc(proc), m_env(env){};
   explicit Expr(Expr_kind kind) : m_kind(kind){};
 
   Expr_kind kind() const { return m_kind; }
   Atom atom() const { return m_atom; }
   Cons* cons() const { return m_cons; }
   Procedure* proc() const { return m_proc; }
+  Env& env() { return m_env; }
 
   static Expr nil() { return Expr(Expr_kind::nil); }
   static Expr err() { return Expr(Expr_kind::err); }
@@ -91,6 +95,12 @@ class Expr {
   Atom m_atom;
   Cons* m_cons;
   Procedure* m_proc;
+  Env m_env;
+};
+
+struct symbol_value {
+  Atom symbol;
+  Expr value;
 };
 
 class Cons {
@@ -106,15 +116,8 @@ class Cons {
 
   static void operator delete(void*) {}
 
-  static Cons* cons(Expr head, Expr rest) { return new Cons(head, rest); }
-
   Expr car;
   Expr cdr;
-};
-
-struct symbol_value {
-  Atom symbol;
-  Expr value;
 };
 
 enum class procedure_kind {
@@ -123,23 +126,19 @@ enum class procedure_kind {
   named_lambda,
 };
 
+// TODO: We want a general purpose linked list instead of stl containers
 typedef std::vector<Expr> List;
-typedef std::vector<symbol_value> Env;
 typedef Expr (*NativeFn)(List);
 
 class Procedure {
  public:
-  Procedure(Expr params, Expr body, Env env)
-      : m_kind(procedure_kind::lambda),
-        m_params(params),
-        m_body(body),
-        m_env(env){};
-  Procedure(Atom symbol, Expr params, Expr body, Env env)
+  Procedure(Expr params, Expr body)
+      : m_kind(procedure_kind::lambda), m_params(params), m_body(body){};
+  Procedure(Atom symbol, Expr params, Expr body)
       : m_symbol(symbol),
         m_kind(procedure_kind::named_lambda),
         m_params(params),
-        m_body(body),
-        m_env(env){};
+        m_body(body){};
   Procedure(Atom symbol, NativeFn native_fn)
       : m_symbol(symbol),
         m_kind(procedure_kind::native),
@@ -158,7 +157,6 @@ class Procedure {
   Expr params() const { return m_params; }
   Expr body() const { return m_body; }
   NativeFn native_fn() const { return m_native_fn; }
-  Env& env() { return m_env; }
 
  private:
   Atom m_symbol;
@@ -166,5 +164,4 @@ class Procedure {
   Expr m_params;
   Expr m_body;
   NativeFn m_native_fn;
-  Env m_env;
 };

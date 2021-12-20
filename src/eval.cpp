@@ -32,19 +32,19 @@ Expr evaluator::eval(Expr exp) {
           return eval(CADDDR(exp));
         }
       case Expr_kind::lambda:
-        return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp),
-                                  *this->get_scope()));
+        return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp)),
+                    *this->get_scope());
       case Expr_kind::named_lambda:
         return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
-                                  /*params=*/CDADR(exp), /*body=*/CDDR(exp),
-                                  *this->get_scope()));
+                                  /*params=*/CDADR(exp), /*body=*/CDDR(exp)),
+                    *this->get_scope());
       case Expr_kind::let: {
         Expr variable_inits = CADR(exp);
         Expr variables = this->variables_from_init_list(variable_inits);
         Expr initializers = this->inits_from_init_list(variable_inits);
         Expr baked_lambda = Expr(new Procedure(
-            /*params=*/variables, /*body=*/CDDR(exp), *this->get_scope()));
-        return this->eval(Expr(Cons::cons(baked_lambda, initializers)));
+                                     /*params=*/variables, /*body=*/CDDR(exp)),
+                                 old_scope);
       }
 
       case Expr_kind::define:
@@ -71,13 +71,13 @@ Expr evaluator::eval(Expr exp) {
 Expr evaluator::variables_from_init_list(Expr exp) {
   // TODO: check pretty much everything (if CAR(exp) is a variable, for ex.)
   if (exp.kind() == Expr_kind::nil) return exp;
-  return Expr(Cons::cons(CAAR(exp), this->variables_from_init_list(CDR(exp))));
+  return Expr(new Cons(CAAR(exp), this->variables_from_init_list(CDR(exp))));
 }
 
 Expr evaluator::inits_from_init_list(Expr exp) {
   // TODO: check pretty much everything (if CAR(exp) is a variable, for ex.)
   if (exp.kind() == Expr_kind::nil) return exp;
-  return Expr(Cons::cons(CADAR(exp), this->inits_from_init_list(CDR(exp))));
+  return Expr(new Cons(CADAR(exp), this->inits_from_init_list(CDR(exp))));
 }
 
 // TODO: this the second form of *define*, implement the first one. See sec. 2.4
@@ -86,7 +86,7 @@ Expr evaluator::eval_define(Expr exp) {
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
     Expr baked_named_lambda =
-        Expr(new Procedure(variable.atom(), params, body, *this->get_scope()));
+        Expr(new Procedure(variable.atom(), params, body), *this->get_scope());
     Expr try_set = this->set(variable.atom(), baked_named_lambda);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
@@ -117,7 +117,7 @@ Expr evaluator::invoke(Expr fn_exp, List args) {
     return fn_exp.proc()->native_fn()(args);
   case procedure_kind::named_lambda:
   case procedure_kind::lambda: {
-    this->push_scope(&fn_exp.proc()->env());
+    this->push_scope(&fn_exp.env());
     Expr head = fn_exp.proc()->params();  // TODO: flatten proc()->params() so
                                           // that we get rid of this non-sense
     for (int index = 0; head.kind() == Expr_kind::cons; index++) {
@@ -201,8 +201,8 @@ Expr evaluator::lookup_symbol(Expr symbol) {
 
 void evaluator::populate_env() {
   auto set_native_fn = [&](Atom symbol, NativeFn fn) {
-    Expr fn_exp = Expr(new Procedure(symbol, fn));
-    m_protected_env.push_back(symbol_value{symbol, fn_exp});
+    m_protected_env.emplace_back(
+        symbol, Expr(new Procedure(symbol, fn), m_initial_env));
   };
   set_native_fn(Atom("+"_sv), NAT_plus);
   set_native_fn(Atom("-"_sv), NAT_minus);
@@ -220,12 +220,6 @@ void evaluator::populate_env() {
 Expr evaluator::bind_variable_in_current_env(Expr symbol, Expr value) {
   this->get_scope()->emplace_back(symbol.atom(), value);
   return symbol;
-}
-
-void evaluator::extend(Env& dst, const Env& src) {
-  for (const auto& sv : src) {
-    dst.push_back(sv);
-  }
 }
 
 Env* evaluator::get_scope() { return m_scope_collection.back(); }

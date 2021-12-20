@@ -57,7 +57,7 @@ TEST(test_heap, use_heap_to_allocate_objects) {
     EXPECT_TRUE(heap.head() != nullptr);
     EXPECT_EQ(heap.size(), 8 * KiB);
 
-    Procedure* obj = new Procedure(Expr::nil(), Expr::nil(), {});
+    Procedure* obj = new Procedure(Expr::nil(), Expr::nil());
     (void)obj;
 
     EXPECT_EQ(heap.head()->size, 8 * KiB);
@@ -72,8 +72,7 @@ TEST(test_heap, use_heap_to_allocate_objects) {
     EXPECT_TRUE(heap.head() != nullptr);
     EXPECT_EQ(heap.size(), 8 * KiB);
 
-    Procedure* obj =
-        new Procedure(Atom("foo"_sv), Expr::nil(), Expr::nil(), {});
+    Procedure* obj = new Procedure(Atom("foo"_sv), Expr::nil(), Expr::nil());
     (void)obj;
 
     heap.destroy();  // destructor call
@@ -104,11 +103,10 @@ TEST(test_heap, use_heap_to_allocate_multiple_objects) {
     Cons* obj_1 = new Cons(Expr::nil(), Expr::nil());
     (void)obj_1;
 
-    Procedure* obj_2 = new Procedure(Expr::nil(), Expr::nil(), {});
+    Procedure* obj_2 = new Procedure(Expr::nil(), Expr::nil());
     (void)obj_2;
 
-    Procedure* obj_3 =
-        new Procedure(Atom("foo"_sv), Expr::nil(), Expr::nil(), {});
+    Procedure* obj_3 = new Procedure(Atom("foo"_sv), Expr::nil(), Expr::nil());
     (void)obj_3;
 
     Procedure* obj_4 = new Procedure(Atom("foo"_sv), {});
@@ -166,7 +164,7 @@ TEST(test_heap, object_inside_container) {
 
   {
     Heap heap(8 * KiB);
-    Procedure* obj = new Procedure(Expr::nil(), Expr::nil(), {});
+    Procedure* obj = new Procedure(Expr::nil(), Expr::nil());
     std::vector<Procedure*> list;
     list.push_back(obj);
     heap.destroy();  // destructor call
@@ -176,7 +174,7 @@ TEST(test_heap, object_inside_container) {
   {
     Heap heap(8 * KiB);
     std::vector<Procedure*> list;
-    list.emplace_back(new Procedure(Expr::nil(), Expr::nil(), {}));
+    list.emplace_back(new Procedure(Expr::nil(), Expr::nil()));
     heap.destroy();  // destructor call
     EXPECT_TRUE(heap.head() == nullptr);
   }
@@ -184,7 +182,7 @@ TEST(test_heap, object_inside_container) {
   {
     Heap heap(8 * KiB);
     std::vector<Expr> list;
-    list.emplace_back(Expr(new Procedure(Expr::nil(), Expr::nil(), {})));
+    list.emplace_back(Expr(new Procedure(Expr::nil(), Expr::nil())));
     heap.destroy();  // destructor call
     EXPECT_TRUE(heap.head() == nullptr);
   }
@@ -193,9 +191,9 @@ TEST(test_heap, object_inside_container) {
     Heap heap(8 * KiB);
     std::vector<Expr> list;
     list.emplace_back(Expr(new Cons(Expr::nil(), Expr::nil())));
-    list.emplace_back(Expr(new Procedure(Expr::nil(), Expr::nil(), {})));
+    list.emplace_back(Expr(new Procedure(Expr::nil(), Expr::nil())));
     list.emplace_back(
-        Expr(new Procedure(Atom("foo"_sv), Expr::nil(), Expr::nil(), {})));
+        Expr(new Procedure(Atom("foo"_sv), Expr::nil(), Expr::nil())));
     list.emplace_back(Expr(new Procedure(Atom("foo"_sv), {})));
     heap.destroy();  // destructor call
     EXPECT_TRUE(heap.head() == nullptr);
