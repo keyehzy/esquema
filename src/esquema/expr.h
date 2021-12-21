@@ -85,6 +85,7 @@ class Expr {
 
   Expr_kind kind() const { return m_kind; }
   Atom atom() const { return m_atom; }
+  Atom& atom() { return m_atom; }
   Cons* cons() const { return m_cons; }
   Procedure* proc() const { return m_proc; }
 

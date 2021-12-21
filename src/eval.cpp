@@ -43,11 +43,23 @@ Expr evaluator::eval(Expr exp) {
                                   *this->get_scope()));
       case Expr_kind::let: {
         Expr variable_inits = CADR(exp);
-        Expr variables = this->variables_from_init_list(variable_inits);
-        Expr initializers = this->inits_from_init_list(variable_inits);
-        Expr baked_lambda = Expr(new Procedure(
-            /*params=*/variables, /*body=*/CDDR(exp), *this->get_scope()));
-        return this->eval(Expr(new Cons(baked_lambda, initializers)));
+        Expr body = CDDR(exp);
+        Env body_env;
+
+        Expr it = variable_inits;
+
+        while (it.kind() != Expr_kind::nil) {
+          Expr variable = CAAR(it);
+          Expr init = CADAR(it);
+          Expr value = this->eval(init);
+          this->bind_variable_to_env(variable, value, body_env);
+          it = CDR(it);
+        }
+
+        this->push_scope(&body_env);
+        Expr result = this->eprogn(body);
+        this->pop_scope();
+        return result;
       }
 
       case Expr_kind::define:
@@ -108,7 +120,8 @@ List evaluator::eval_list(Expr exp) {
   Expr head = exp;
   List list;
   while (head.kind() == Expr_kind::cons) {
-    list.push_back(eval(CAR(head)));
+    Expr value = eval(CAR(head));
+    list.push_back(value);
     head = CDR(head);
   }
   return list;
@@ -156,6 +169,7 @@ Expr evaluator::eprogn(Expr exp) {
 }
 
 Expr evaluator::eval_atom(Expr exp) {
+  if (exp.atom().is_evaluated) return exp;
   switch (exp.atom().token_().type) {
   case token_t::character:  // TODO: maybe we can evaluate these here?
   case token_t::float_:
@@ -163,6 +177,7 @@ Expr evaluator::eval_atom(Expr exp) {
   case token_t::string:
     return exp;
   case token_t::symbol:
+    if (exp.atom().is_evaluated) return exp;
     return this->lookup_symbol(exp);
   default:
     ESQUEMA_ERROR("Could not evaluate atom");
@@ -203,6 +218,7 @@ Expr evaluator::lookup_symbol(Expr symbol) {
     }
   }
 
+  symbol.atom().is_evaluated = true;
   return symbol;  // autoquote
 }
 
@@ -225,6 +241,11 @@ void evaluator::populate_env() {
 // TODO: We need to differentiate between nothing and nil
 Expr evaluator::bind_variable_in_current_env(Expr symbol, Expr value) {
   this->get_scope()->add(symbol.atom(), value);
+  return value;
+}
+
+Expr evaluator::bind_variable_to_env(Expr symbol, Expr value, Env& env) {
+  env.add(symbol.atom(), value);
   return value;
 }
 

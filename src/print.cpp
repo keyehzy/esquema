@@ -1,4 +1,5 @@
 #include "esquema/eval.h"
+#include "esquema/expr.h"
 #include "esquema/lex.h"
 #include "esquema/parse.h"
 #include "esquema/print.h"
@@ -178,8 +179,10 @@ void printer::print_evaluated_atom(Expr exp, padding pad) {
     this->append(std::to_string(exp.atom().as_int()), pad);
   } else if (exp.atom().type() == token_t::float_) {
     this->append(std::to_string(exp.atom().as_float()), pad);
-  } else {
+  } else if (exp.atom().type() == token_t::err) {
     this->append("ERROR!!!"_sv, pad);
+  } else {
+    this->append(exp.atom().as_string(), pad);  // autoquote
   }
 }
 

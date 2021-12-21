@@ -143,14 +143,20 @@ TEST(test, examples) {
         "3"_sv);
   }
   // TODO: let
-  // { EXPECT_EQ(pprint("(begin (define foo (let ((x 4)) (lambda (y) (+ x y))))
-  // (foo 6))"_sv), "10"_sv); }
+  // {
+  //   EXPECT_EQ(
+  //       pprint(
+  //           "(begin (define foo (let ((x 4)) (lambda (y) (+ x y)))) (foo
+  //           6))"_sv),
+  //       "10"_sv);
+  // }
 }
 
 TEST(test, let) {
   { EXPECT_EQ(pprint("(let ((x 1)) x)"_sv), "1"_sv); }
   { EXPECT_EQ(pprint("(let ((x 1) (y 2)) x)"_sv), "1"_sv); }
   { EXPECT_EQ(pprint("(let ((x 1) (y 2)) y)"_sv), "2"_sv); }
+  { EXPECT_EQ(pprint("(let ((x 1) (y x)) y)"_sv), "x"_sv); }  // autoquote
   {
     EXPECT_EQ(
         pprint(

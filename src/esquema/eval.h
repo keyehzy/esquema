@@ -20,6 +20,7 @@ class evaluator {
   Expr invoke(Expr, List);
   List eval_list(Expr);
   Expr bind_variable_in_current_env(Expr, Expr);
+  Expr bind_variable_to_env(Expr, Expr, Env&);
   Expr variables_from_init_list(Expr);
   Expr inits_from_init_list(Expr);
 
