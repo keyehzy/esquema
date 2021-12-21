@@ -55,6 +55,9 @@ TEST(test, level2) {
     EXPECT_EQ(pprint("(begin (define add3 (lambda (x) (+ x 3))) (add3 3))"_sv),
               "6"_sv);
   };
+
+  { EXPECT_EQ(pprint("(begin (define x 1) (define (f x) 2) x)"_sv), "1"_sv); };
+
   {
     EXPECT_EQ(
         pprint(

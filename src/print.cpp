@@ -136,13 +136,20 @@ void printer::print_closure(Expr lambda) {
   if (lambda.proc()->kind() == procedure_kind::named_lambda)
     this->append(lambda.proc()->symbol().as_string(), padding::right);
 
-  Env env = lambda.env();
+  Env closure = lambda.proc()->closure();
 
-  RPAD_PAREN_BLOCK(for (auto& [key, val]
-                        : env) {
-    RPAD_PAREN_BLOCK(this->append(key.as_string());
-                     this->append(".", padding::both); this->pprint(val););
-  } this->append("t"_sv););
+  // clang-format off
+  RPAD_PAREN_BLOCK(
+      closure.forEach([&] (const Atom& symbol, const Expr& value) {
+        RPAD_PAREN_BLOCK(
+            this->append(symbol.as_string());
+            this->append(".", padding::both);
+            this->pprint(value);
+        );
+      });
+      this->append("t"_sv);
+  );
+  // clang-format on
 
   Expr params = lambda.proc()->params();
   Expr body = lambda.proc()->body();

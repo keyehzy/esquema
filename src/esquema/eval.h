@@ -23,15 +23,14 @@ class evaluator {
   Expr variables_from_init_list(Expr);
   Expr inits_from_init_list(Expr);
 
-
-  Env *get_scope();
-  void push_scope(Env *);
+  Env* get_scope();
+  void push_scope(Env*);
   void pop_scope();
 
  private:
-  Env m_initial_env;
-  Env m_protected_env;
-  std::vector<Env *> m_scope_collection;
+  Env m_env{};
+  Env m_protected_env{};
+  std::vector<Env*> m_scope_collection;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;

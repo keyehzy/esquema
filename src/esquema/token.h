@@ -33,7 +33,7 @@ struct location {
   location(string_view sv) : begin(sv.begin()), end(sv.end()){};
   const char* begin;
   const char* end;
-  string_view as_string() { return string_view{begin, end}; }
+  string_view as_string() const { return string_view{begin, end}; }
 };
 
 class token {
@@ -45,7 +45,7 @@ class token {
   explicit token(token_t type, const char* begin, const char* end)
       : type(type), loc(location{begin, end}){};
 
-  string_view as_string() { return loc.as_string(); }
+  string_view as_string() const { return loc.as_string(); }
   token_t type;
   location loc;
 };

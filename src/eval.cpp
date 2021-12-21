@@ -7,7 +7,8 @@
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
   this->populate_env();
-  this->push_scope(&m_initial_env);
+  this->push_scope(&m_protected_env);
+  this->push_scope(&m_env);
   m_value = this->eval(m_original_value);
 };
 
@@ -19,7 +20,9 @@ Expr evaluator::eval(Expr exp) {
     return this->eval_atom(exp);
   case Expr_kind::cons:
     if (CDR(exp).kind() == Expr_kind::nil) {
-      if (CAR(exp).kind() != Expr_kind::quote) return eval(CAR(exp));
+      if (CAR(exp).kind() != Expr_kind::quote) {
+        return eval(CAR(exp));
+      }
     } else {
       switch (CAR(exp).kind()) {
       case Expr_kind::quote:
@@ -32,19 +35,19 @@ Expr evaluator::eval(Expr exp) {
           return eval(CADDDR(exp));
         }
       case Expr_kind::lambda:
-        return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp)),
-                    *this->get_scope());
+        return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp),
+                                  *this->get_scope()));
       case Expr_kind::named_lambda:
         return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
-                                  /*params=*/CDADR(exp), /*body=*/CDDR(exp)),
-                    *this->get_scope());
+                                  /*params=*/CDADR(exp), /*body=*/CDDR(exp),
+                                  *this->get_scope()));
       case Expr_kind::let: {
         Expr variable_inits = CADR(exp);
         Expr variables = this->variables_from_init_list(variable_inits);
         Expr initializers = this->inits_from_init_list(variable_inits);
         Expr baked_lambda = Expr(new Procedure(
-                                     /*params=*/variables, /*body=*/CDDR(exp)),
-                                 old_scope);
+            /*params=*/variables, /*body=*/CDDR(exp), *this->get_scope()));
+        return this->eval(Expr(new Cons(baked_lambda, initializers)));
       }
 
       case Expr_kind::define:
@@ -64,6 +67,7 @@ Expr evaluator::eval(Expr exp) {
   case Expr_kind::nil:
     return exp;
   default:
+    ESQUEMA_ERROR("Could not evaluate expression");
     return Expr::err();
   }
 }
@@ -86,7 +90,7 @@ Expr evaluator::eval_define(Expr exp) {
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
     Expr baked_named_lambda =
-        Expr(new Procedure(variable.atom(), params, body), *this->get_scope());
+        Expr(new Procedure(variable.atom(), params, body, *this->get_scope()));
     Expr try_set = this->set(variable.atom(), baked_named_lambda);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
@@ -111,26 +115,30 @@ List evaluator::eval_list(Expr exp) {
 }
 
 Expr evaluator::invoke(Expr fn_exp, List args) {
-  if (fn_exp.kind() != Expr_kind::procedure) return Expr::err();
+  if (fn_exp.kind() != Expr_kind::procedure) {
+    ESQUEMA_ERROR("An expression of kind 'procedure' was expected.");
+    return Expr::err();
+  }
   switch (fn_exp.proc()->kind()) {
   case procedure_kind::native:
     return fn_exp.proc()->native_fn()(args);
   case procedure_kind::named_lambda:
   case procedure_kind::lambda: {
-    this->push_scope(&fn_exp.env());
-    Expr head = fn_exp.proc()->params();  // TODO: flatten proc()->params() so
-                                          // that we get rid of this non-sense
+    this->push_scope(&fn_exp.proc()->env());
+    Expr head = fn_exp.proc()->params();
+
+    // TODO: bound checking
     for (int index = 0; head.kind() == Expr_kind::cons; index++) {
-      this->bind_variable_in_current_env(CAR(head),
-                                         args[index]);  // TODO: bound checking
+      this->bind_variable_in_current_env(CAR(head), args[index]);
       head = CDR(head);
     }
+
     Expr result = this->eprogn(fn_exp.proc()->body());
     this->pop_scope();
     return result;
   }
   }
-  // CHECK NOT REACHED
+  ESQUEMA_NOT_REACHED();
 }
 
 Expr evaluator::eprogn(Expr exp) {
@@ -157,6 +165,7 @@ Expr evaluator::eval_atom(Expr exp) {
   case token_t::symbol:
     return this->lookup_symbol(exp);
   default:
+    ESQUEMA_ERROR("Could not evaluate atom");
     return Expr::err();
   }
 }
@@ -175,25 +184,23 @@ Expr evaluator::set(Atom symbol, Expr new_val) {
   // or at the top level. However, variable is permitted to be unassigned when
   // the set! form is entered.
   for (Env* env : m_scope_collection) {
-    for (auto& [key, val] : *env) {
-      if (symbol == key) {
-        val = new_val;
-        return val;
-      }
+    EnvNode* node = env->find(symbol);
+    if (node != nullptr) {
+      node->value = new_val;
+      return new_val;
     }
   }
+
+  //  ESQUEMA_ERROR("set! on an unbound variable");
   return Expr::err();  // set! on an unbound variable
 }
 
 Expr evaluator::lookup_symbol(Expr symbol) {
   for (Env* env : m_scope_collection) {
-    for (auto& [key, val] : *env) {
-      if (symbol.atom() == key) return val;
+    EnvNode* node = env->find(symbol.atom());
+    if (node != nullptr) {
+      return node->value;
     }
-  }
-
-  for (auto& [key, val] : m_protected_env) {
-    if (symbol.atom() == key) return val;
   }
 
   return symbol;  // autoquote
@@ -201,8 +208,7 @@ Expr evaluator::lookup_symbol(Expr symbol) {
 
 void evaluator::populate_env() {
   auto set_native_fn = [&](Atom symbol, NativeFn fn) {
-    m_protected_env.emplace_back(
-        symbol, Expr(new Procedure(symbol, fn), m_initial_env));
+    m_protected_env.add(symbol, Expr(new Procedure(symbol, fn)));
   };
   set_native_fn(Atom("+"_sv), NAT_plus);
   set_native_fn(Atom("-"_sv), NAT_minus);
@@ -216,14 +222,12 @@ void evaluator::populate_env() {
   set_native_fn(Atom("<="_sv), NAT_le);
 }
 
-// TODO: We need to differenciete between nothing and nil
+// TODO: We need to differentiate between nothing and nil
 Expr evaluator::bind_variable_in_current_env(Expr symbol, Expr value) {
-  this->get_scope()->emplace_back(symbol.atom(), value);
-  return symbol;
+  this->get_scope()->add(symbol.atom(), value);
+  return value;
 }
 
 Env* evaluator::get_scope() { return m_scope_collection.back(); }
-
 void evaluator::push_scope(Env* env) { m_scope_collection.push_back(env); }
-
 void evaluator::pop_scope() { m_scope_collection.pop_back(); }
