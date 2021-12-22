@@ -177,6 +177,8 @@ end:
     t.type = token_t::quote;
   } else if (t.as_string() == "let"_sv) {
     t.type = token_t::let;
+  } else if (t.as_string() == "let*"_sv) {
+    t.type = token_t::let_star;
   }
 
   return t;

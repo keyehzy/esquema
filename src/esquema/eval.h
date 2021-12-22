@@ -10,28 +10,21 @@ class evaluator {
  public:
   explicit evaluator(string_view input);
   void populate_env();
-  Expr eval(Expr);
-  Expr eval_atom(Expr);
-  Expr eval_define(Expr);
-  Expr lookup_symbol(Expr);
-  Expr eprogn(Expr);
-  Expr set(Atom, Expr);
+  Expr eval(Expr, Env&);
+  Expr eval_atom(Expr, Env&);
+  Expr eval_define(Expr, Env&);
+  Expr lookup_symbol(Expr, Env);
+  Expr eprogn(Expr, Env&);
+  Expr set(Atom, Expr, Env&);
   Expr value() const;
-  Expr invoke(Expr, List);
-  List eval_list(Expr);
-  Expr bind_variable_in_current_env(Expr, Expr);
-  Expr bind_variable_to_env(Expr, Expr, Env&);
+  Expr invoke(Expr, List, Env&);
+  List eval_list(Expr, Env&);
+  Expr bind_variable(Expr, Expr, Env&);
   Expr variables_from_init_list(Expr);
   Expr inits_from_init_list(Expr);
 
-  Env* get_scope();
-  void push_scope(Env*);
-  void pop_scope();
-
  private:
-  Env m_env{};
-  Env m_protected_env{};
-  std::vector<Env*> m_scope_collection;
+  Env m_protected_env;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;

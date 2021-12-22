@@ -7,21 +7,20 @@
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
   this->populate_env();
-  this->push_scope(&m_protected_env);
-  this->push_scope(&m_env);
-  m_value = this->eval(m_original_value);
+  Env initial_env;
+  m_value = this->eval(m_original_value, initial_env);
 };
 
 Expr evaluator::value() const { return m_value; }
 
-Expr evaluator::eval(Expr exp) {
+Expr evaluator::eval(Expr exp, Env& env) {
   switch (exp.kind()) {
   case Expr_kind::atom:
-    return this->eval_atom(exp);
+    return this->eval_atom(exp, env);
   case Expr_kind::cons:
     if (CDR(exp).kind() == Expr_kind::nil) {
       if (CAR(exp).kind() != Expr_kind::quote) {
-        return eval(CAR(exp));
+        return eval(CAR(exp), env);
       }
     } else {
       switch (CAR(exp).kind()) {
@@ -29,18 +28,18 @@ Expr evaluator::eval(Expr exp) {
       case Expr_kind::quote_abbrev:
         return CADR(exp);
       case Expr_kind::if_:
-        if (eval(CADR(exp)).kind() != Expr_kind::false_) {
-          return eval(CADDR(exp));
+        if (eval(CADR(exp), env).kind() != Expr_kind::false_) {
+          return eval(CADDR(exp), env);
         } else {
-          return eval(CADDDR(exp));
+          return eval(CADDDR(exp), env);
         }
       case Expr_kind::lambda:
-        return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp),
-                                  *this->get_scope()));
+        return Expr(
+            new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp), env));
       case Expr_kind::named_lambda:
         return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
                                   /*params=*/CDADR(exp), /*body=*/CDDR(exp),
-                                  *this->get_scope()));
+                                  env));
       case Expr_kind::let: {
         Expr variable_inits = CADR(exp);
         Expr body = CDDR(exp);
@@ -51,25 +50,42 @@ Expr evaluator::eval(Expr exp) {
         while (it.kind() != Expr_kind::nil) {
           Expr variable = CAAR(it);
           Expr init = CADAR(it);
-          Expr value = this->eval(init);
-          this->bind_variable_to_env(variable, value, body_env);
+          Expr value = this->eval(init, env);
+          this->bind_variable(variable, value, env);
           it = CDR(it);
         }
 
-        this->push_scope(&body_env);
-        Expr result = this->eprogn(body);
-        this->pop_scope();
+        Expr result = this->eprogn(body, env);
+        return result;
+      }
+
+      case Expr_kind::let_star: {
+        Expr variable_inits = CADR(exp);
+        Expr body = CDDR(exp);
+        Env body_env;
+
+        Expr it = variable_inits;
+        while (it.kind() != Expr_kind::nil) {
+          Expr variable = CAAR(it);
+          Expr init = CADAR(it);
+          Expr value = this->eval(init, env);
+          this->bind_variable(variable, value, env);
+          it = CDR(it);
+        }
+
+        Expr result = this->eprogn(body, env);
         return result;
       }
 
       case Expr_kind::define:
-        return this->eval_define(exp);
+        return this->eval_define(exp, env);
       case Expr_kind::begin:
-        return this->eprogn(CDR(exp));
+        return this->eprogn(CDR(exp), env);
       case Expr_kind::set:
-        return this->set(CADR(exp).atom(), eval(CADDR(exp)));
+        return this->set(CADR(exp).atom(), eval(CADDR(exp), env), env);
       default:
-        return this->invoke(eval(CAR(exp)), this->eval_list(CDR(exp)));
+        return this->invoke(eval(CAR(exp), env), this->eval_list(CDR(exp), env),
+                            env);
       }
     }
     break;
@@ -98,36 +114,37 @@ Expr evaluator::inits_from_init_list(Expr exp) {
 
 // TODO: this the second form of *define*, implement the first one. See sec. 2.4
 // https://www.gnu.org/software/mit-scheme/documentation/stable/mit-scheme-ref.pdf
-Expr evaluator::eval_define(Expr exp) {
+Expr evaluator::eval_define(Expr exp, Env& env) {
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
+    Env temp_env;
     Expr baked_named_lambda =
-        Expr(new Procedure(variable.atom(), params, body, *this->get_scope()));
-    Expr try_set = this->set(variable.atom(), baked_named_lambda);
+        Expr(new Procedure(variable.atom(), params, body, temp_env));
+    Expr try_set = this->set(variable.atom(), baked_named_lambda, env);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
-    return this->bind_variable_in_current_env(variable, baked_named_lambda);
+    return this->bind_variable(variable, baked_named_lambda, env);
   } else {
-    Expr variable = CADR(exp), expression = eval(CDDR(exp));
-    Expr try_set = this->set(variable.atom(), expression);
+    Expr variable = CADR(exp), expression = eval(CDDR(exp), env);
+    Expr try_set = this->set(variable.atom(), expression, env);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
-    return this->bind_variable_in_current_env(variable, expression);
+    return this->bind_variable(variable, expression, env);
   }
 }
 
-List evaluator::eval_list(Expr exp) {
+List evaluator::eval_list(Expr exp, Env& env) {
   Expr head = exp;
   List list;
   while (head.kind() == Expr_kind::cons) {
-    Expr value = eval(CAR(head));
+    Expr value = eval(CAR(head), env);
     list.push_back(value);
     head = CDR(head);
   }
   return list;
 }
 
-Expr evaluator::invoke(Expr fn_exp, List args) {
+Expr evaluator::invoke(Expr fn_exp, List args, Env& env) {
   if (fn_exp.kind() != Expr_kind::procedure) {
     ESQUEMA_ERROR("An expression of kind 'procedure' was expected.");
     return Expr::err();
@@ -137,39 +154,38 @@ Expr evaluator::invoke(Expr fn_exp, List args) {
     return fn_exp.proc()->native_fn()(args);
   case procedure_kind::named_lambda:
   case procedure_kind::lambda: {
-    this->push_scope(&fn_exp.proc()->env());
     Expr head = fn_exp.proc()->params();
+
+    fn_exp.proc()->env().extend_from(env);
 
     // TODO: bound checking
     for (int index = 0; head.kind() == Expr_kind::cons; index++) {
-      this->bind_variable_in_current_env(CAR(head), args[index]);
+      this->bind_variable(CAR(head), args[index], fn_exp.proc()->env());
       head = CDR(head);
     }
 
-    Expr result = this->eprogn(fn_exp.proc()->body());
-    this->pop_scope();
+    Expr result = this->eprogn(fn_exp.proc()->body(), fn_exp.proc()->env());
     return result;
   }
   }
   ESQUEMA_NOT_REACHED();
 }
 
-Expr evaluator::eprogn(Expr exp) {
+Expr evaluator::eprogn(Expr exp, Env& env) {
   Expr head = exp;
   Expr val = head;
   while (head.kind() == Expr_kind::cons) {
-    val = this->eval(CAR(head));
+    val = this->eval(CAR(head), env);
 
     // TODO: Check for errors
     if (val.kind() == Expr_kind::err) return val;
 
     head = CDR(head);
   }
-  return eval(val);
+  return eval(val, env);
 }
 
-Expr evaluator::eval_atom(Expr exp) {
-  if (exp.atom().is_evaluated) return exp;
+Expr evaluator::eval_atom(Expr exp, Env& env) {
   switch (exp.atom().token_().type) {
   case token_t::character:  // TODO: maybe we can evaluate these here?
   case token_t::float_:
@@ -177,15 +193,14 @@ Expr evaluator::eval_atom(Expr exp) {
   case token_t::string:
     return exp;
   case token_t::symbol:
-    if (exp.atom().is_evaluated) return exp;
-    return this->lookup_symbol(exp);
+    return this->lookup_symbol(exp, env);
   default:
     ESQUEMA_ERROR("Could not evaluate atom");
     return Expr::err();
   }
 }
 
-Expr evaluator::set(Atom symbol, Expr new_val) {
+Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
   // Section (2.5) MIT-Scheme Reference:
   // If expression is specified, evaluates expression and stores the resulting
   // value in the location to which variable is bound. If expression is omitted,
@@ -198,27 +213,27 @@ Expr evaluator::set(Atom symbol, Expr new_val) {
   // Variable must be bound either in some region enclosing the set! expression,
   // or at the top level. However, variable is permitted to be unassigned when
   // the set! form is entered.
-  for (Env* env : m_scope_collection) {
-    EnvNode* node = env->find(symbol);
-    if (node != nullptr) {
-      node->value = new_val;
-      return new_val;
-    }
+  EnvNode* node = env.find(symbol);
+  if (node != nullptr) {
+    node->value = new_val;
+    return new_val;
   }
 
   //  ESQUEMA_ERROR("set! on an unbound variable");
   return Expr::err();  // set! on an unbound variable
 }
 
-Expr evaluator::lookup_symbol(Expr symbol) {
-  for (Env* env : m_scope_collection) {
-    EnvNode* node = env->find(symbol.atom());
-    if (node != nullptr) {
-      return node->value;
-    }
+Expr evaluator::lookup_symbol(Expr symbol, Env env) {
+  EnvNode* node = env.find(symbol.atom());
+  if (node != nullptr) {
+    return node->value;
   }
 
-  symbol.atom().is_evaluated = true;
+  node = m_protected_env.find(symbol.atom());
+  if (node != nullptr) {
+    return node->value;
+  }
+
   return symbol;  // autoquote
 }
 
@@ -239,16 +254,7 @@ void evaluator::populate_env() {
 }
 
 // TODO: We need to differentiate between nothing and nil
-Expr evaluator::bind_variable_in_current_env(Expr symbol, Expr value) {
-  this->get_scope()->add(symbol.atom(), value);
-  return value;
-}
-
-Expr evaluator::bind_variable_to_env(Expr symbol, Expr value, Env& env) {
+Expr evaluator::bind_variable(Expr symbol, Expr value, Env& env) {
   env.add(symbol.atom(), value);
   return value;
 }
-
-Env* evaluator::get_scope() { return m_scope_collection.back(); }
-void evaluator::push_scope(Env* env) { m_scope_collection.push_back(env); }
-void evaluator::pop_scope() { m_scope_collection.pop_back(); }

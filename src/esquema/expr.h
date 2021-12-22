@@ -57,9 +57,11 @@ enum Expr_kind {
   if_,
   lambda,
   let,
+  let_star,
   named_lambda,
   procedure,
   quote,
+
   quote_abbrev,
   set,
   true_,
@@ -173,6 +175,14 @@ class Env {
       it = it->next;
     }
     return it;
+  }
+
+  void extend_from(const Env& env) {
+    EnvNode* it = env.m_root;
+    while (it != nullptr) {
+      this->add(it->symbol, it->value);
+      it = it->next;
+    }
   }
 
   void forEach(const std::function<void(const Atom&, const Expr&)>& operation) {

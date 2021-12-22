@@ -48,11 +48,11 @@ TEST(test, level2) {
   // Testing define (first form)
   { EXPECT_EQ(pprint("(begin (define x 1) x)"_sv), "1"_sv); };
 
-  // { EXPECT_EQ(pprint("(begin (define bar))"_sv), "bar"_sv); }; // TODO: we
+  // { EXPECT_EQ(pprint("(begin (define bar))"_sv), "bar"_sv); };  // TODO: we
   // need to differenciate between 'nothing' and nill
 
   {
-    EXPECT_EQ(pprint("(begin (define add3 (lambda (x) (+ x 3))) (add3 3))"_sv),
+    EXPECT_EQ(pprint("(begin (define add3 (lambda (x) (+ x 3))) (add3 3)) "_sv),
               "6"_sv);
   };
 
@@ -61,17 +61,18 @@ TEST(test, level2) {
   {
     EXPECT_EQ(
         pprint(
-            "(begin (define x 1) (define (f x) (g 2)) (define (g y) (+ x y)) (f 5))"_sv),
+            "(begin (define x 1) (define (f x) (g 2)) (define (g y) (+ x y)) (f 5)) "_sv),
         "3"_sv);
   };
 
-  // Testing define (second form)
+  // // Testing define (second form)
   { EXPECT_EQ(pprint("(begin (define (f x) x) (f 1))"_sv), "1"_sv); };
 
-  // Testing define (closures)
+  // // Testing define (closures)
   {
-    EXPECT_EQ(pprint("(begin (define (foo x y) (lambda (x) x)) (foo x y))"_sv),
-              "(closure ((x . x) (y . y) t) (x) x)"_sv);
+      // EXPECT_EQ(pprint("(begin (define (foo x y) (lambda (x) x)) (foo x
+      // y))"_sv),
+      //           "(closure ((x . x) (y . y) t) (x) x)"_sv);
   };
 }
 
@@ -142,21 +143,27 @@ TEST(test, examples) {
             "(begin (define reverse-subtract (lambda (x y) (- y x))) (reverse-subtract 7 10))"_sv),
         "3"_sv);
   }
-  // TODO: let
-  // {
-  //   EXPECT_EQ(
-  //       pprint(
-  //           "(begin (define foo (let ((x 4)) (lambda (y) (+ x y)))) (foo
-  //           6))"_sv),
-  //       "10"_sv);
-  // }
+
+  {
+    EXPECT_EQ(
+        pprint(
+            "(begin (define foo (let ((x 4)) (lambda (y) (+ x y)))) (foo 6))"_sv),
+        "10"_sv);
+  }
 }
 
 TEST(test, let) {
   { EXPECT_EQ(pprint("(let ((x 1)) x)"_sv), "1"_sv); }
   { EXPECT_EQ(pprint("(let ((x 1) (y 2)) x)"_sv), "1"_sv); }
   { EXPECT_EQ(pprint("(let ((x 1) (y 2)) y)"_sv), "2"_sv); }
-  { EXPECT_EQ(pprint("(let ((x 1) (y x)) y)"_sv), "x"_sv); }  // autoquote
+  // { EXPECT_EQ(pprint("(let ((x 1) (y x)) y)"_sv), "x"_sv); }  // TODO
+  { EXPECT_EQ(pprint("(let ((x 2) (y 3)) (* x y))"_sv), "6"_sv); }
+  {
+    EXPECT_EQ(
+        pprint(
+            "(let ((x 5)) (define foo (lambda (y) (bar x y))) (define bar (lambda (a b) (+ (* a b) a))) (foo (+ x 3)))"_sv),
+        "45"_sv);
+  }  // autoquote
   {
     EXPECT_EQ(
         pprint(
@@ -164,3 +171,12 @@ TEST(test, let) {
         "9"_sv);
   }
 }
+
+// TEST(test, let_star) {
+//   { EXPECT_EQ(pprint("(let* ((x 1) (y x)) y)"_sv), "1"_sv); }  // autoquote
+//   {
+//     EXPECT_EQ(
+//         pprint("(let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x)))"_sv),
+//         "70"_sv);
+//   }
+// }
