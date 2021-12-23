@@ -80,8 +80,8 @@
   O('=')                                  \
   O('<')                                  \
   O('>')                                  \
-  O('!')
-
+  O('!')                                  \
+  O('?')
 #define CASE(e) case e:
 #define CASE_NUMBERS ENUMERATE_NUMBERS(CASE)
 #define CASE_CHARS ENUMERATE_NUMBERS(CASE)

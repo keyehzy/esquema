@@ -17,14 +17,18 @@ class evaluator {
   Expr eprogn(Expr, Env&);
   Expr set(Atom, Expr, Env&);
   Expr value() const;
-  Expr invoke(Expr, List, Env&);
+  Expr invoke(Expr, List);
   List eval_list(Expr, Env&);
   Expr bind_variable(Expr, Expr, Env&);
   Expr variables_from_init_list(Expr);
   Expr inits_from_init_list(Expr);
 
+  bool is_at_top_level(const Env&);
+  bool is_inside_lambda = false;
+
  private:
   Env m_protected_env;
+  Env m_toplevel_env;
   Expr m_value;
   Expr m_original_value;
   parser m_parser;

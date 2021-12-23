@@ -7,8 +7,7 @@
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
   this->populate_env();
-  Env initial_env;
-  m_value = this->eval(m_original_value, initial_env);
+  m_value = this->eval(m_original_value, m_toplevel_env);
 };
 
 Expr evaluator::value() const { return m_value; }
@@ -19,9 +18,7 @@ Expr evaluator::eval(Expr exp, Env& env) {
     return this->eval_atom(exp, env);
   case Expr_kind::cons:
     if (CDR(exp).kind() == Expr_kind::nil) {
-      if (CAR(exp).kind() != Expr_kind::quote) {
-        return eval(CAR(exp), env);
-      }
+      return eval(CAR(exp), env);
     } else {
       switch (CAR(exp).kind()) {
       case Expr_kind::quote:
@@ -41,39 +38,79 @@ Expr evaluator::eval(Expr exp, Env& env) {
                                   /*params=*/CDADR(exp), /*body=*/CDDR(exp),
                                   env));
       case Expr_kind::let: {
+        bool was_already_inside_lambda = is_inside_lambda;
+        is_inside_lambda = true;
+
         Expr variable_inits = CADR(exp);
         Expr body = CDDR(exp);
-        Env body_env;
-
+        Env let_env;
+        let_env.extend_from(env);
         Expr it = variable_inits;
-
         while (it.kind() != Expr_kind::nil) {
           Expr variable = CAAR(it);
           Expr init = CADAR(it);
           Expr value = this->eval(init, env);
-          this->bind_variable(variable, value, env);
+          this->bind_variable(variable, value, let_env);
+          it = CDR(it);
+        }
+        Expr result = this->eprogn(body, let_env);
+        is_inside_lambda = was_already_inside_lambda;
+        return result;
+      }
+
+      case Expr_kind::letrec: {
+        bool was_already_inside_lambda = is_inside_lambda;
+        is_inside_lambda = true;
+
+        Expr variable_inits = CADR(exp);
+        Expr body = CDDR(exp);
+        Env extended_env;
+        extended_env.extend_from(env);
+
+        // 1) The variables are bound to fresh locations holding unassigned
+        // values, the inits are evaluated in the extended environment
+        Expr it = variable_inits;
+        while (it.kind() != Expr_kind::nil) {
+          Expr variable = CAAR(it);
+          this->bind_variable(variable, Expr::nil(), extended_env);
           it = CDR(it);
         }
 
-        Expr result = this->eprogn(body, env);
+        // 2) each variable is assigned to the result of the corresponding init
+        it = variable_inits;
+        while (it.kind() != Expr_kind::nil) {
+          Expr variable = CAAR(it);
+          Expr init = CADAR(it);
+          Expr value = this->eval(init, extended_env);
+          this->set(variable.atom(), value, extended_env);
+          it = CDR(it);
+        }
+
+        // 3) the exprs are evaluated sequentially in the extended environment,
+        // and the value of the last expr is returned
+        Expr result = this->eprogn(body, extended_env);
+        is_inside_lambda = was_already_inside_lambda;
         return result;
       }
 
       case Expr_kind::let_star: {
+        bool was_already_inside_lambda = is_inside_lambda;
+        is_inside_lambda = true;
+
         Expr variable_inits = CADR(exp);
         Expr body = CDDR(exp);
-        Env body_env;
-
+        Env let_env;
+        let_env.extend_from(env);
         Expr it = variable_inits;
         while (it.kind() != Expr_kind::nil) {
           Expr variable = CAAR(it);
           Expr init = CADAR(it);
-          Expr value = this->eval(init, env);
-          this->bind_variable(variable, value, env);
+          Expr value = this->eval(init, let_env);
+          this->bind_variable(variable, value, let_env);
           it = CDR(it);
         }
-
-        Expr result = this->eprogn(body, env);
+        Expr result = this->eprogn(body, let_env);
+        is_inside_lambda = was_already_inside_lambda;
         return result;
       }
 
@@ -84,8 +121,8 @@ Expr evaluator::eval(Expr exp, Env& env) {
       case Expr_kind::set:
         return this->set(CADR(exp).atom(), eval(CADDR(exp), env), env);
       default:
-        return this->invoke(eval(CAR(exp), env), this->eval_list(CDR(exp), env),
-                            env);
+        return this->invoke(eval(CAR(exp), env),
+                            this->eval_list(CDR(exp), env));
       }
     }
     break;
@@ -98,28 +135,19 @@ Expr evaluator::eval(Expr exp, Env& env) {
     ESQUEMA_ERROR("Could not evaluate expression");
     return Expr::err();
   }
+  ESQUEMA_NOT_REACHED();
 }
 
-Expr evaluator::variables_from_init_list(Expr exp) {
-  // TODO: check pretty much everything (if CAR(exp) is a variable, for ex.)
-  if (exp.kind() == Expr_kind::nil) return exp;
-  return Expr(new Cons(CAAR(exp), this->variables_from_init_list(CDR(exp))));
-}
-
-Expr evaluator::inits_from_init_list(Expr exp) {
-  // TODO: check pretty much everything (if CAR(exp) is a variable, for ex.)
-  if (exp.kind() == Expr_kind::nil) return exp;
-  return Expr(new Cons(CADAR(exp), this->inits_from_init_list(CDR(exp))));
-}
-
-// TODO: this the second form of *define*, implement the first one. See sec. 2.4
+// See sec. 2.4
 // https://www.gnu.org/software/mit-scheme/documentation/stable/mit-scheme-ref.pdf
 Expr evaluator::eval_define(Expr exp, Env& env) {
+  ESQUEMA_ASSERT(is_at_top_level(env) || is_inside_lambda);
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
     Env temp_env;
     Expr baked_named_lambda =
-        Expr(new Procedure(variable.atom(), params, body, temp_env));
+        Expr(new Procedure(/*symbol=*/variable.atom(), /*params=*/params,
+                           /*body=*/body, temp_env));
     Expr try_set = this->set(variable.atom(), baked_named_lambda, env);
     if (try_set.kind() != Expr_kind::err)  // set! to bounded variable
       return try_set;
@@ -144,7 +172,7 @@ List evaluator::eval_list(Expr exp, Env& env) {
   return list;
 }
 
-Expr evaluator::invoke(Expr fn_exp, List args, Env& env) {
+Expr evaluator::invoke(Expr fn_exp, List args) {
   if (fn_exp.kind() != Expr_kind::procedure) {
     ESQUEMA_ERROR("An expression of kind 'procedure' was expected.");
     return Expr::err();
@@ -154,17 +182,21 @@ Expr evaluator::invoke(Expr fn_exp, List args, Env& env) {
     return fn_exp.proc()->native_fn()(args);
   case procedure_kind::named_lambda:
   case procedure_kind::lambda: {
+    bool was_already_inside_lambda = is_inside_lambda;
+    is_inside_lambda = true;
+
     Expr head = fn_exp.proc()->params();
 
-    fn_exp.proc()->env().extend_from(env);
+    Env invocation_env;
+    invocation_env.extend_from(fn_exp.proc()->closing_env());
 
     // TODO: bound checking
     for (int index = 0; head.kind() == Expr_kind::cons; index++) {
-      this->bind_variable(CAR(head), args[index], fn_exp.proc()->env());
+      this->bind_variable(CAR(head), args[index], invocation_env);
       head = CDR(head);
     }
-
-    Expr result = this->eprogn(fn_exp.proc()->body(), fn_exp.proc()->env());
+    Expr result = this->eprogn(fn_exp.proc()->body(), invocation_env);
+    is_inside_lambda = was_already_inside_lambda;
     return result;
   }
   }
@@ -182,7 +214,7 @@ Expr evaluator::eprogn(Expr exp, Env& env) {
 
     head = CDR(head);
   }
-  return eval(val, env);
+  return val;
 }
 
 Expr evaluator::eval_atom(Expr exp, Env& env) {
@@ -202,35 +234,50 @@ Expr evaluator::eval_atom(Expr exp, Env& env) {
 
 Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
   // Section (2.5) MIT-Scheme Reference:
-  // If expression is specified, evaluates expression and stores the resulting
-  // value in the location to which variable is bound. If expression is omitted,
-  // variable is altered to be unassigned; a subsequent reference to such a
-  // variable is an error. In either case, the value of the set! expression is
-  // unspecified.
-  // TODO: unassgined state for variable
-  // TODO: unspecified value for unassigned variable
 
-  // Variable must be bound either in some region enclosing the set! expression,
-  // or at the top level. However, variable is permitted to be unassigned when
-  // the set! form is entered.
-  EnvNode* node = env.find(symbol);
+  // 1) If expression is specified, evaluates expression and stores the
+  // resulting value in the location to which variable is bound. If expression
+  // is omitted, variable is altered to be unassigned; a subsequent reference to
+  // such a variable is an error. In either case, the value of the set!
+  // expression is unspecified.
+
+  EnvNode* node = env.find_last(symbol);
   if (node != nullptr) {
     node->value = new_val;
     return new_val;
   }
 
-  //  ESQUEMA_ERROR("set! on an unbound variable");
+  // 2) Variable must be bound either in some region enclosing the set!
+  // expression, or at the top level. However, variable is permitted to be
+  // unassigned when the set! form is entered.
+  node = m_toplevel_env.find_last(symbol);
+  if (node != nullptr) {
+    node->value = new_val;
+    return new_val;
+  }
+
   return Expr::err();  // set! on an unbound variable
 }
 
 Expr evaluator::lookup_symbol(Expr symbol, Env env) {
-  EnvNode* node = env.find(symbol.atom());
+  EnvNode* node = m_protected_env.find_last(symbol.atom());
   if (node != nullptr) {
     return node->value;
   }
 
-  node = m_protected_env.find(symbol.atom());
+  node = env.find_last(symbol.atom());
   if (node != nullptr) {
+    if (node->value.kind() == Expr_kind::nil) {
+      return symbol;
+    }
+    return node->value;
+  }
+
+  node = m_toplevel_env.find_last(symbol.atom());
+  if (node != nullptr) {
+    if (node->value.kind() == Expr_kind::nil) {
+      return symbol;
+    }
     return node->value;
   }
 
@@ -256,5 +303,14 @@ void evaluator::populate_env() {
 // TODO: We need to differentiate between nothing and nil
 Expr evaluator::bind_variable(Expr symbol, Expr value, Env& env) {
   env.add(symbol.atom(), value);
+
+  if (value.kind() == Expr_kind::nil) {
+    return symbol;
+  }
+
   return value;
+}
+
+bool evaluator::is_at_top_level(const Env& env) {
+  return &env == &m_toplevel_env;  // TODO: better checking
 }

@@ -48,7 +48,7 @@ TEST(test, level2) {
   // Testing define (first form)
   { EXPECT_EQ(pprint("(begin (define x 1) x)"_sv), "1"_sv); };
 
-  // { EXPECT_EQ(pprint("(begin (define bar))"_sv), "bar"_sv); };  // TODO: we
+  { EXPECT_EQ(pprint("(begin (define bar))"_sv), "bar"_sv); };  // TODO: we
   // need to differenciate between 'nothing' and nill
 
   {
@@ -156,7 +156,7 @@ TEST(test, let) {
   { EXPECT_EQ(pprint("(let ((x 1)) x)"_sv), "1"_sv); }
   { EXPECT_EQ(pprint("(let ((x 1) (y 2)) x)"_sv), "1"_sv); }
   { EXPECT_EQ(pprint("(let ((x 1) (y 2)) y)"_sv), "2"_sv); }
-  // { EXPECT_EQ(pprint("(let ((x 1) (y x)) y)"_sv), "x"_sv); }  // TODO
+  { EXPECT_EQ(pprint("(let ((x 1) (y x)) y)"_sv), "x"_sv); }  // TODO
   { EXPECT_EQ(pprint("(let ((x 2) (y 3)) (* x y))"_sv), "6"_sv); }
   {
     EXPECT_EQ(
@@ -172,11 +172,32 @@ TEST(test, let) {
   }
 }
 
-// TEST(test, let_star) {
-//   { EXPECT_EQ(pprint("(let* ((x 1) (y x)) y)"_sv), "1"_sv); }  // autoquote
-//   {
-//     EXPECT_EQ(
-//         pprint("(let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x)))"_sv),
-//         "70"_sv);
-//   }
-// }
+TEST(test, let_star) {
+  { EXPECT_EQ(pprint("(let* ((x 1) (y x)) y)"_sv), "1"_sv); }
+  {
+    EXPECT_EQ(
+        pprint("(let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x)))"_sv),
+        "70"_sv);
+  }
+}
+
+TEST(test, letrec) {
+  {
+    EXPECT_EQ(
+        pprint(
+            "(letrec ((zero? (lambda (n) (= 0 n))) (even? (lambda (n) (if (zero? n) #t (odd? (- n 1))))) (odd? (lambda (n) (if (zero? n) #f (even? (- n 1)))))) (even? 88))"_sv),
+        "#t"_sv);
+  }
+}
+
+TEST(test, recursion) {
+  {
+    EXPECT_EQ(pprint("(begin (define (fib n) (if (<= n 2) 1 (+ (fib (- n 1)) "
+                     "(fib (- n 2))))) (fib 8))"),
+              "21");
+
+    EXPECT_EQ(pprint("(begin (define (fact n) (if (= n 1) 1 (* n (fact (- n 1) "
+                     ")))) (fact 5))"),
+              "120");
+  }
+}

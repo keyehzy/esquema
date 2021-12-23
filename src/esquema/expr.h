@@ -58,6 +58,7 @@ enum Expr_kind {
   lambda,
   let,
   let_star,
+  letrec,
   named_lambda,
   procedure,
   quote,
@@ -177,6 +178,16 @@ class Env {
     return it;
   }
 
+  EnvNode* find_last(Atom symbol) {
+    EnvNode* it = m_root;
+    EnvNode* last = nullptr;
+    while (it != nullptr) {
+      if (it->symbol == symbol) last = it;
+      it = it->next;
+    }
+    return last;
+  }
+
   void extend_from(const Env& env) {
     EnvNode* it = env.m_root;
     while (it != nullptr) {
@@ -215,13 +226,13 @@ class Procedure {
       : m_kind(procedure_kind::lambda),
         m_params(params),
         m_body(body),
-        m_closure(env){};
+        m_closing_env(env){};
   Procedure(Atom symbol, Expr params, Expr body, Env env)
       : m_symbol(symbol),
         m_kind(procedure_kind::named_lambda),
         m_params(params),
         m_body(body),
-        m_closure(env){};
+        m_closing_env(env){};
   Procedure(Atom symbol, NativeFn native_fn)
       : m_symbol(symbol),
         m_kind(procedure_kind::native),
@@ -254,7 +265,7 @@ class Procedure {
   Expr body() const { return m_body; }
   NativeFn native_fn() const { return m_native_fn; }
   Env& env() { return m_env; }
-  Env& closure() { return m_closure; }
+  Env& closing_env() { return m_closing_env; }
 
  private:
   Atom m_symbol;
@@ -263,5 +274,5 @@ class Procedure {
   Expr m_body;
   NativeFn m_native_fn;
   Env m_env;
-  Env m_closure;
+  Env m_closing_env;
 };
