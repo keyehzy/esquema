@@ -1,6 +1,7 @@
 #include "esquema/eval.h"
 #include "esquema/expr.h"
 #include "esquema/lex.h"
+#include "esquema/padded_string.h"
 #include "esquema/parse.h"
 #include "esquema/print.h"
 #include "esquema/token.h"
@@ -33,7 +34,7 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
     this->print_atom(exp, pad);
     break;
   case Expr_kind::cons:
-    this->print_cons(exp);
+    this->print_cons(exp, pad);
     break;
   case Expr_kind::true_:
     this->append("#t"_sv, pad);
@@ -53,15 +54,15 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
   }
 }
 
-void printer::print_cons(Expr exp) {
+void printer::print_cons(Expr exp, padding pad = padding::none) {
   if (CDR(exp).kind() == Expr_kind::nil) {
-    if (CAR(exp).kind() != Expr_kind::quote) return this->pprint(CAR(exp));
+    return this->pprint(CAR(exp), pad);
   } else {
     switch (CAR(exp).kind()) {
     case Expr_kind::quote:
     case Expr_kind::quote_abbrev:
       PAREN_BLOCK(this->append("quote"_sv, padding::right);
-                  this->pprint(CADR(exp)););
+                  this->pprint(CDR(exp), pad););
       break;
     case Expr_kind::if_:
       PAREN_BLOCK(this->append("if"_sv, padding::right);

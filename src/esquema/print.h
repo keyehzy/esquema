@@ -19,7 +19,7 @@ class printer {
   void pprint(Expr, padding);
   void print_atom(Expr, padding);
   void print_evaluated_atom(Expr, padding);
-  void print_cons(Expr);
+  void print_cons(Expr, padding);
   void print_procedure(Expr);
   void print_block(Expr);
   void print_closure(Expr);

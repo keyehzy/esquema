@@ -56,6 +56,8 @@ enum Expr_kind {
   false_,
   if_,
   lambda,
+  list,
+  append,
   let,
   let_star,
   letrec,
@@ -63,8 +65,9 @@ enum Expr_kind {
   named_lambda,
   procedure,
   quote,
-
   quote_abbrev,
+  quasiquote,
+  unquote,
   set,
   true_,
 };
@@ -277,3 +280,26 @@ class Procedure {
   Env m_env;
   Env m_closing_env;
 };
+
+inline Expr CAR(const Expr& x) { return x.cons()->car; }
+inline Expr CAAR(const Expr& x) { return x.cons()->car.cons()->car; }
+inline Expr CADR(const Expr& x) { return x.cons()->cdr.cons()->car; }
+inline Expr CADAR(const Expr& x) {
+  return x.cons()->car.cons()->cdr.cons()->car;
+}
+inline Expr CAADR(const Expr& x) {
+  return x.cons()->cdr.cons()->car.cons()->car;
+}
+inline Expr CADDR(const Expr& x) {
+  return x.cons()->cdr.cons()->cdr.cons()->car;
+}
+inline Expr CADDDR(const Expr& x) {
+  return x.cons()->cdr.cons()->cdr.cons()->cdr.cons()->car;
+}
+
+inline Expr CDR(const Expr& x) { return x.cons()->cdr; }
+inline Expr CDDR(const Expr& x) { return x.cons()->cdr.cons()->cdr; }
+inline Expr CDAR(const Expr& x) { return x.cons()->car.cons()->cdr; }
+inline Expr CDADR(const Expr& x) {
+  return x.cons()->cdr.cons()->car.cons()->cdr;
+}

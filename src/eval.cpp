@@ -58,8 +58,15 @@ Expr evaluator::eval(Expr exp, Env& env) {
         return result;
       }
 
-      // The difference between these two, as fair as I understand, is just in
-      // the order of evaluation, maybe allowing some optimizations.
+      case Expr_kind::list:
+        return this->build_list(CDR(exp), env);
+
+      case Expr_kind::append:
+        return this->append_list(this->eval(CADR(exp), env), CDDR(exp), env);
+
+      // The difference between these two, as fair as I understand, is
+      // just in the order of evaluation, maybe allowing some
+      // optimizations.
       case Expr_kind::letrec: {
       case Expr_kind::letrec_star:
         bool was_already_inside_lambda = is_inside_lambda;
@@ -79,7 +86,8 @@ Expr evaluator::eval(Expr exp, Env& env) {
           it = CDR(it);
         }
 
-        // 2) each variable is assigned to the result of the corresponding init
+        // 2) each variable is assigned to the result of the corresponding
+        // init
         it = variable_inits;
         while (it.kind() != Expr_kind::nil) {
           Expr variable = CAAR(it);
@@ -89,8 +97,8 @@ Expr evaluator::eval(Expr exp, Env& env) {
           it = CDR(it);
         }
 
-        // 3) the exprs are evaluated sequentially in the extended environment,
-        // and the value of the last expr is returned
+        // 3) the exprs are evaluated sequentially in the extended
+        // environment, and the value of the last expr is returned
         Expr result = this->eprogn(body, extended_env);
         is_inside_lambda = was_already_inside_lambda;
         return result;
@@ -139,6 +147,29 @@ Expr evaluator::eval(Expr exp, Env& env) {
     return Expr::err();
   }
   ESQUEMA_NOT_REACHED();
+}
+
+/*
+(define append
+(lambda (ls1 ls2)
+  (if (null? ls1)
+    ls2
+    (cons (car ls1) (append (cdr ls1) ls2)))))
+*/
+Expr evaluator::append_list(Expr list1, Expr list2, Env& env) {
+  if (list1.kind() == Expr_kind::nil) {
+    return this->eval(list2, env);
+  }
+  return Expr(new Cons(this->eval(CAR(list1), env),
+                       this->append_list(CDR(list1), list2, env)));
+}
+
+Expr evaluator::build_list(Expr exp, Env& env) {
+  if (exp.kind() == Expr_kind::nil) {
+    return exp;
+  }
+  return Expr(
+      new Cons(this->eval(CAR(exp), env), this->build_list(CDR(exp), env)));
 }
 
 // See sec. 2.4

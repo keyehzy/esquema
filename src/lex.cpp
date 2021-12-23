@@ -30,6 +30,12 @@ void lexer::parse_current_token() {
   case '\'':
     m_last_token = this->parse_single_char_token(token_t::quote_abbrev);
     break;
+  case '`':
+    m_last_token = this->parse_single_char_token(token_t::quasiquote);
+    break;
+  case ',':
+    m_last_token = this->parse_single_char_token(token_t::unquote);
+    break;
   case '\"':
     m_last_token = this->parse_string_literal();
     break;
@@ -183,6 +189,10 @@ end:
     t.type = token_t::letrec;
   } else if (t.as_string() == "letrec*"_sv) {
     t.type = token_t::letrec_star;
+  } else if (t.as_string() == "list"_sv) {
+    t.type = token_t::list;
+  } else if (t.as_string() == "append"_sv) {
+    t.type = token_t::append;
   }
 
   return t;
