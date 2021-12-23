@@ -22,6 +22,7 @@ enum class token_t {
   let,
   let_star,
   letrec,
+  letrec_star,
   quote,
   quote_abbrev,
   right_paren,

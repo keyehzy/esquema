@@ -181,6 +181,8 @@ end:
     t.type = token_t::let_star;
   } else if (t.as_string() == "letrec"_sv) {
     t.type = token_t::letrec;
+  } else if (t.as_string() == "letrec*"_sv) {
+    t.type = token_t::letrec_star;
   }
 
   return t;

@@ -58,7 +58,10 @@ Expr evaluator::eval(Expr exp, Env& env) {
         return result;
       }
 
+      // The difference between these two, as fair as I understand, is just in
+      // the order of evaluation, maybe allowing some optimizations.
       case Expr_kind::letrec: {
+      case Expr_kind::letrec_star:
         bool was_already_inside_lambda = is_inside_lambda;
         is_inside_lambda = true;
 

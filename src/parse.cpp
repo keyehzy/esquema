@@ -38,6 +38,8 @@ Expr parser::parse_head() {
     return this->parse_single_token(Expr_kind::let_star);
   case token_t::letrec:
     return this->parse_single_token(Expr_kind::letrec);
+  case token_t::letrec_star:
+    return this->parse_single_token(Expr_kind::letrec_star);
   case token_t::if_:
     return this->parse_single_token(Expr_kind::if_);
   case token_t::lambda:

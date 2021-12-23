@@ -59,6 +59,7 @@ enum Expr_kind {
   let,
   let_star,
   letrec,
+  letrec_star,
   named_lambda,
   procedure,
   quote,
