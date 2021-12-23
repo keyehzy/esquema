@@ -121,6 +121,8 @@ class Cons {
     return new (heap) Cons(head, rest);
   }
 
+  static Expr expr(Expr head, Expr rest) { return Expr(new Cons(head, rest)); }
+
   Expr car;
   Expr cdr;
 };

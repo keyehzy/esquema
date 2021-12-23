@@ -91,8 +91,7 @@ TEST(test, begin) {
   }
 }
 
-TEST(test, quote) {
-  // Testing quote of lists
+TEST(test, quote) {  // Testing quote of lists
   { EXPECT_EQ(pprint("(quote a)"_sv), "a"_sv); }
   { EXPECT_EQ(pprint("(quote (+ 1 2))"_sv), "(+ 1 2)"_sv); }
   { EXPECT_EQ(pprint("'a"_sv), "a"_sv); }
@@ -114,20 +113,28 @@ TEST(test, quote) {
   { EXPECT_EQ(pprint("'(+ 1 (+ 2 3))"_sv), "(+ 1 (+ 2 3))"_sv); }
 }
 
-// TEST(test, quasiquote) {
-//   { EXPECT_EQ(pprint("`(+ 1 2)"_sv), "(+ 1 2)"_sv); }
-//   { EXPECT_EQ(pprint("`(+ 1 ,(+ 1 2))"_sv), "(+ 1 3)"_sv); }
-// }
-
 TEST(test, list) {
   { EXPECT_EQ(pprint("(list 1 2 3)"_sv), "(1 2 3)"_sv); }
   { EXPECT_EQ(pprint("(list (+ 1 2) 4 5)"_sv), "(3 4 5)"_sv); }
+  { EXPECT_EQ(pprint("(list 'a (+ 3 4) 'c)"_sv), "(a 7 c)"_sv); }
+  { EXPECT_EQ(pprint("(list)"_sv), "()"_sv); }
   {
     EXPECT_EQ(pprint("(begin (define x 42) (list (+ x 1) (+ x 2) (+ x 3)))"_sv),
               "(43 44 45)"_sv);
   }
   { EXPECT_EQ(pprint("(append '(1) '(2))"_sv), "(1 2)"_sv); }
   { EXPECT_EQ(pprint("(append '(1 2) '(3 4))"_sv), "(1 2 3 4)"_sv); }
+}
+
+TEST(test, quasiquote) {
+  { EXPECT_EQ(pprint("`(+ 1 2)"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("`(+ 1 ,(+ 1 2))"_sv), "(+ 1 3)"_sv); }
+  { EXPECT_EQ(pprint("`(list 1 2)"_sv), "(list 1 2)"_sv); }
+  { EXPECT_EQ(pprint("`(list ,(+ 1 2) 4)"_sv), "(list 3 4)"_sv); }
+  {
+    EXPECT_EQ(pprint("(let ((name 'a)) `(list ,name ',name))"_sv),
+              "(list a (quote a))"_sv);
+  }
 }
 
 TEST(test, if_statement) {

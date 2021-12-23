@@ -33,13 +33,12 @@ Expr parser::parse_head() {
     return Expr(new Cons(quote_exp, Expr(new Cons(quoted, Expr::nil()))));
   }
   case token_t::quasiquote: {  // TODO: is there cases like ', ',@ etc?
-    Expr quasiquote_exp = this->parse_single_token(Expr_kind::quasiquote);
+    this->parse_single_token(Expr_kind::quasiquote);
     Expr quasiquoted = this->parse_head();
     // TODO: check for errors
     if (quasiquoted.kind() == Expr_kind::err) return quasiquoted;
-    // Expr expand = this->qq_expand(quasiquote_exp, quasiquoted);
-    return Expr(
-        new Cons(quasiquote_exp, Expr(new Cons(quasiquoted, Expr::nil()))));
+    Expr expanded = this->qq_expand(quasiquoted);
+    return expanded;
   }
   case token_t::unquote: {
     Expr quote_exp = this->parse_single_token(Expr_kind::unquote);
@@ -85,42 +84,6 @@ Expr parser::parse_head() {
   }
 }
 
-Expr parser::append(Expr front, Expr back) {
-  return Expr(new Cons(front, Expr(new Cons(back, Expr::nil()))));
-}
-
-// TODO: we need to implement two function before doing this:
-// list -> a function a builds a list
-// append -> add a item to the end of a list
-// Expr parser::qq_expand_list(Expr quote, Expr quoted) {
-//   switch (quoted.kind()) {
-//   case Expr_kind::cons:
-//     if (CAR(quoted).kind() == unquote) {
-//       return Expr(
-//           new Cons(CADR(quoted), Expr::nil()));  // NOTE: maybe one more cons
-//     } else {                                     // TODO: commaat
-//       Expr expand_car = qq_expand_list(quote, CAR(quoted));
-//       Expr expand_cdr = qq_expand(quote, CDR(quoted));
-//       return Cons(CADR
-//     }
-//   }
-// }
-
-// Expr parser::qq_expand(Expr quote, Expr quoted) {
-//   switch (quoted.kind()) {
-//   case Expr_kind::cons:
-//     if (CAR(quoted).kind() == Expr_kind::unquote) {
-//       return CADR(quoted);
-//     } else {
-//       Expr expand_car = this->qq_expand_list(quote, CAR(quoted));
-//       Expr expand_cdr = this->qq_expand(quote, CDR(quoted));
-//       return append(
-//     }
-//   default:
-//     return Expr(new Cons(quote, Expr(new Cons(quoted, Expr::nil()))));
-//   }
-// }
-
 Expr parser::parse_subexpr() {
   switch (this->peek().type) {
   case token_t::right_paren:
@@ -148,4 +111,50 @@ Expr parser::parse_single_token(Expr_kind kind) {
   Expr e = Expr(kind, Atom(this->peek()));
   this->skip();
   return e;
+}
+
+Expr parser::make_list2(Expr e1, Expr e2) {
+  return Cons::expr(e1, Cons::expr(e2, Expr::nil()));
+}
+
+Expr parser::make_list3(Expr e1, Expr e2, Expr e3) {
+  return Cons::expr(e1, Cons::expr(e2, Cons::expr(e3, Expr::nil())));
+}
+
+Expr parser::append(Expr front, Expr back) {
+  return this->make_list3(Expr(Expr_kind::append), front, back);
+}
+
+Expr parser::qq_expand_list(Expr list) {
+  switch (list.kind()) {
+  case Expr_kind::cons:
+    if (CAR(list).kind() == unquote) {
+      return this->make_list2(Expr(Expr_kind::list), CADR(list));
+    } else {  // TODO: commaat
+      Expr expand_car = qq_expand_list(CAR(list));
+      Expr expand_cdr = qq_expand(CDR(list));
+      return this->make_list2(Expr(Expr_kind::list),
+                              append(expand_car, expand_cdr));
+    }
+    break;
+  default: {
+    Expr a_list = Cons::expr(list, Expr::nil());
+    return this->make_list2(Expr(Expr_kind::quote), a_list);
+  }
+  }
+}
+
+Expr parser::qq_expand(Expr quoted) {
+  switch (quoted.kind()) {
+  case Expr_kind::cons:
+    if (CAR(quoted).kind() == Expr_kind::unquote) {
+      return CADR(quoted);
+    } else {  // TODO: commaat case
+      Expr expand_car = this->qq_expand_list(CAR(quoted));
+      Expr expand_cdr = this->qq_expand(CDR(quoted));
+      return this->append(expand_car, expand_cdr);
+    }
+  default:
+    return this->make_list2(Expr(Expr_kind::quote), quoted);
+  }
 }

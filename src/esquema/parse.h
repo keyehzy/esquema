@@ -15,9 +15,11 @@ class parser {
   Expr parse_atom();
   Expr parse_subexpr();
   Expr parse_single_token(Expr_kind);
-  Expr qq_expand(Expr, Expr);
-  Expr qq_expand_list(Expr, Expr);
+  Expr qq_expand(Expr);
+  Expr qq_expand_list(Expr);
   Expr append(Expr, Expr);
+  Expr make_list2(Expr, Expr);
+  Expr make_list3(Expr, Expr, Expr);
 
  private:
   lexer m_lexer;

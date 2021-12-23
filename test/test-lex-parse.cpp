@@ -91,10 +91,20 @@ TEST(test, level1) {
   // Testing read of quoting
   { EXPECT_EQ(pprint_quoted("'1"), "(quote 1)"); }
   { EXPECT_EQ(pprint_quoted("'(1 2 3)"), "(quote (1 2 3))"); }
-  // { EXPECT_EQ(pprint_quoted("(`1)"), "(1)"); }
-  // { EXPECT_EQ(pprint_quoted("(`(1 2 3))"), "((1 (2 3)))"); }
-  // { EXPECT_EQ(pprint_quoted("(,1)"), "((comma (1 nil)))"); }
-  // { EXPECT_EQ(pprint_quoted("(,(1 2 3))"), "((comma ((1 (2 3)) nil)))"); }
-  // { EXPECT_EQ(pprint_quoted("(`(1 ,a 3))"), "((1 ((comma (a nil)) 3)))"); }
+  { EXPECT_EQ(pprint_quoted("(`1)"), "(quote 1)"); }
+  {  // FIXME: spacing
+    EXPECT_EQ(
+        pprint_quoted("`(1 2 3)"),
+        "(append (quote 1 )(append (quote 2 )(append (quote 3 )(quote ()))))");
+  }
+  // { EXPECT_EQ(pprint_quoted("`(+ 1 2)"), "(+ 1 2)"); }        // FIXME:
+  // spacing
+  { EXPECT_EQ(pprint_quoted("(,1)"), "(, 1)"); }              // FIXME: spacing
+  { EXPECT_EQ(pprint_quoted("(,(1 2 3))"), "(, (1 2 3))"); }  // FIXME: spacing
+  {
+    EXPECT_EQ(
+        pprint_quoted("(`(1 ,a 3))"),
+        "(append (quote 1 )(append (list a)(append (quote 3 )(quote ()))))");
+  }
   // { EXPECT_EQ(pprint_quoted("(,@(1 2 3))"), "((commaat ((1 (2 3)) nil)))"); }
 }

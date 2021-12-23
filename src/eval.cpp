@@ -17,7 +17,8 @@ Expr evaluator::eval(Expr exp, Env& env) {
   case Expr_kind::atom:
     return this->eval_atom(exp, env);
   case Expr_kind::cons:
-    if (CDR(exp).kind() == Expr_kind::nil) {
+    if (CDR(exp).kind() == Expr_kind::nil &&
+        CAR(exp).kind() != Expr_kind::list) {
       return eval(CAR(exp), env);
     } else {
       switch (CAR(exp).kind()) {
@@ -59,9 +60,13 @@ Expr evaluator::eval(Expr exp, Env& env) {
       }
 
       case Expr_kind::list:
+        if (CDR(exp).kind() == Expr_kind::nil) return CDR(exp);
+        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
         return this->build_list(CDR(exp), env);
 
       case Expr_kind::append:
+        ESQUEMA_ASSERT(CADR(exp).kind() == Expr_kind::cons);
+        ESQUEMA_ASSERT(CDDR(exp).kind() == Expr_kind::cons);
         return this->append_list(this->eval(CADR(exp), env), CDDR(exp), env);
 
       // The difference between these two, as fair as I understand, is
@@ -160,16 +165,14 @@ Expr evaluator::append_list(Expr list1, Expr list2, Env& env) {
   if (list1.kind() == Expr_kind::nil) {
     return this->eval(list2, env);
   }
-  return Expr(new Cons(this->eval(CAR(list1), env),
-                       this->append_list(CDR(list1), list2, env)));
+  return Cons::expr(CAR(list1), this->append_list(CDR(list1), list2, env));
 }
 
 Expr evaluator::build_list(Expr exp, Env& env) {
   if (exp.kind() == Expr_kind::nil) {
     return exp;
   }
-  return Expr(
-      new Cons(this->eval(CAR(exp), env), this->build_list(CDR(exp), env)));
+  return Cons::expr(this->eval(CAR(exp), env), this->build_list(CDR(exp), env));
 }
 
 // See sec. 2.4

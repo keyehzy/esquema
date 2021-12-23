@@ -45,6 +45,15 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
   case Expr_kind::nil:
     this->append("()"_sv, pad);
     break;
+  case Expr_kind::list:
+    this->append("list"_sv, pad);
+    break;
+  case Expr_kind::append:
+    this->append("append"_sv, pad);
+    break;
+  case Expr_kind::unquote:
+    this->append(","_sv, pad);
+    break;
   case Expr_kind::procedure:
     this->print_procedure(exp);
     break;
@@ -116,11 +125,19 @@ void printer::print_block(Expr exp) {
 }
 
 void printer::print_procedure(Expr exp) {
-  if (exp.kind() != Expr_kind::procedure) this->append("ERROR!!!"_sv);
+  ESQUEMA_ASSERT(exp.kind() == Expr_kind::procedure);
   switch (exp.proc()->kind()) {  // TODO: lambda and named-lambda closures
   case procedure_kind::native:
-    PAREN_BLOCK(this->append(exp.proc()->symbol().as_string());
-                this->pprint(exp.proc()->params()););
+    // clang-format off
+    if(exp.proc()->params().kind() != Expr_kind::err) {
+      PAREN_BLOCK(
+          this->append(exp.proc()->symbol().as_string());
+          this->pprint(exp.proc()->params());
+      );
+    } else {
+      this->append(exp.proc()->symbol().as_string(), padding::right);
+    }
+    // clang-format on
     break;
   case procedure_kind::lambda:
   case procedure_kind::named_lambda:
