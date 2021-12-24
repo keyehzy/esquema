@@ -18,62 +18,14 @@ Expr evaluator::eval(Expr exp, Env& env) {
     return this->eval_atom(exp, env);
   case Expr_kind::cons:
     if (CDR(exp).kind() == Expr_kind::nil &&
-        CAR(exp).kind() != Expr_kind::list) {
+        CAR(exp).atom().type() != token_t::list) {
       return eval(CAR(exp), env);
     } else {
       switch (CAR(exp).kind()) {
-      case Expr_kind::car:
-        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
-        return CAR(this->eval(CDR(exp), env));
-      case Expr_kind::cdr:
-        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
-        return CDR(this->eval(CDR(exp), env));
-      case Expr_kind::cons_:
-        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
-        // TODO: the code (cons 'a 'b) is invalid because 'b is not a list
-        return Cons::expr(this->eval(CADR(exp), env),
-                          this->eval(CDDR(exp), env));
-      case Expr_kind::quote:
+      case Expr_kind::atom:
+        return this->eval_syntactic_keyword(exp, env);
       case Expr_kind::quote_abbrev:
         return CADR(exp);
-      case Expr_kind::if_:
-        if (eval(CADR(exp), env).kind() != Expr_kind::false_) {
-          return eval(CADDR(exp), env);
-        } else {
-          return eval(CADDDR(exp), env);
-        }
-      case Expr_kind::lambda:
-        return Expr(
-            new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp), env));
-      case Expr_kind::named_lambda:
-        return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
-                                  /*params=*/CDADR(exp), /*body=*/CDDR(exp),
-                                  env));
-      case Expr_kind::list:
-        if (CDR(exp).kind() == Expr_kind::nil) return CDR(exp);
-        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
-        return this->build_list(CDR(exp), env);
-
-      case Expr_kind::append:
-        ESQUEMA_ASSERT(CDDR(exp).kind() == Expr_kind::cons);
-        return this->append_list(this->eval(CADR(exp), env), CDDR(exp), env);
-
-      case Expr_kind::let:
-      case Expr_kind::let_star:
-        return this->eval_let(exp, env);
-
-      // NOTE: The difference between these two, as fair as I understand, is
-      // just in the order of evaluation, maybe allowing some optimizations.
-      case Expr_kind::letrec:
-      case Expr_kind::letrec_star:
-        return this->eval_letrec(exp, env);
-
-      case Expr_kind::define:
-        return this->eval_define(exp, env);
-      case Expr_kind::begin:
-        return this->eprogn(CDR(exp), env);
-      case Expr_kind::set:
-        return this->set(CADR(exp).atom(), eval(CADDR(exp), env), env);
       default:
         return this->invoke(eval(CAR(exp), env),
                             this->eval_list(CDR(exp), env));
@@ -81,13 +33,67 @@ Expr evaluator::eval(Expr exp, Env& env) {
     }
     break;
   case Expr_kind::procedure:
-  case Expr_kind::true_:
-  case Expr_kind::false_:
   case Expr_kind::nil:
     return exp;
   default:
     ESQUEMA_ERROR("Could not evaluate expression");
     return Expr::err();
+  }
+  ESQUEMA_NOT_REACHED();
+}
+
+Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
+  switch (CAR(exp).atom().type()) {
+  case token_t::car:
+    ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+    return CAR(this->eval(CDR(exp), env));
+  case token_t::cdr:
+    ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+    return CDR(this->eval(CDR(exp), env));
+  case token_t::cons:
+    ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+    // TODO: the code (cons 'a 'b) is invalid because 'b is not a list
+    return Cons::expr(this->eval(CADR(exp), env), this->eval(CDDR(exp), env));
+  case token_t::quote:
+    return CADR(exp);
+  case token_t::if_:
+    if (eval(CADR(exp), env).atom().type() != token_t::false_) {
+      return eval(CADDR(exp), env);
+    } else {
+      return eval(CADDDR(exp), env);
+    }
+  case token_t::lambda:
+    return Expr(new Procedure(/*params=*/CADR(exp), /*body=*/CDDR(exp), env));
+  case token_t::named_lambda:
+    return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
+                              /*params=*/CDADR(exp), /*body=*/CDDR(exp), env));
+  case token_t::list:
+    if (CDR(exp).kind() == Expr_kind::nil) return CDR(exp);
+    ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+    return this->build_list(CDR(exp), env);
+
+  case token_t::append:
+    ESQUEMA_ASSERT(CDDR(exp).kind() == Expr_kind::cons);
+    return this->append_list(this->eval(CADR(exp), env), CDDR(exp), env);
+
+  case token_t::let:
+  case token_t::let_star:
+    return this->eval_let(exp, env);
+
+  // NOTE: The difference between these two, as fair as I understand, is
+  // just in the order of evaluation, maybe allowing some optimizations.
+  case token_t::letrec:
+  case token_t::letrec_star:
+    return this->eval_letrec(exp, env);
+
+  case token_t::define:
+    return this->eval_define(exp, env);
+  case token_t::begin:
+    return this->eprogn(CDR(exp), env);
+  case token_t::set:
+    return this->set(CADR(exp).atom(), eval(CADDR(exp), env), env);
+  default:
+    return this->invoke(eval(CAR(exp), env), this->eval_list(CDR(exp), env));
   }
   ESQUEMA_NOT_REACHED();
 }
@@ -140,8 +146,9 @@ Expr evaluator::eval_let(Expr exp, Env& env) {
   while (it.kind() != Expr_kind::nil) {
     Expr variable = CAAR(it);
     Expr init = CADAR(it);
-    Expr value = CAR(exp).kind() == Expr_kind::let ? this->eval(init, env)
-                                                   : this->eval(init, let_env);
+    Expr value = CAR(exp).atom().type() == token_t::let
+                     ? this->eval(init, env)
+                     : this->eval(init, let_env);
     this->bind_variable(variable, value, let_env);
     it = CDR(it);
   }
@@ -256,6 +263,8 @@ Expr evaluator::eval_atom(Expr exp, Env& env) {
   case token_t::float_:
   case token_t::integer:
   case token_t::string:
+  case token_t::true_:
+  case token_t::false_:
     return exp;
   case token_t::symbol:
     return this->lookup_symbol(exp, env);

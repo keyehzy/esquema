@@ -220,7 +220,7 @@ TEST(test, letrec) {
 
 TEST(test, recursion) {
   {
-    EXPECT_EQ(pprint("(begin (define (fib n) (if (<= n 2) 1 (+ (fib (- n 1)) "
+    EXPECT_EQ(pprint("(begin (define (fib n) (if (<= n 2) 1 (+ (fib (- n 1))"
                      "(fib (- n 2))))) (fib 8))"),
               "21");
 

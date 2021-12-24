@@ -36,20 +36,8 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
   case Expr_kind::cons:
     this->print_cons(exp, pad);
     break;
-  case Expr_kind::true_:
-    this->append("#t"_sv, pad);
-    break;
-  case Expr_kind::false_:
-    this->append("#f"_sv, pad);
-    break;
   case Expr_kind::nil:
     this->append("()"_sv, pad);
-    break;
-  case Expr_kind::list:
-    this->append("list"_sv, pad);
-    break;
-  case Expr_kind::append:
-    this->append("append"_sv, pad);
     break;
   case Expr_kind::unquote:
     this->append(","_sv, pad);
@@ -71,48 +59,62 @@ void printer::print_cons(Expr exp, padding pad = padding::none) {
     return this->pprint(CAR(exp), pad);
   } else {
     switch (CAR(exp).kind()) {
-    case Expr_kind::quote:
+    case Expr_kind::atom:
+      return this->print_syntactic_keyword(exp, pad);
     case Expr_kind::quote_abbrev:
       PAREN_BLOCK(this->append("quote"_sv, padding::right);
                   this->pprint(CDR(exp), pad););
-      break;
-    case Expr_kind::if_:
-      PAREN_BLOCK(this->append("if"_sv, padding::right);
-                  RPAD_PAREN_BLOCK(this->pprint(CADR(exp)));
-                  RPAD_WS_BLOCK(this->pprint(CADDR(exp))); this->pprint(
-                      CADDDR(exp)););  // TODO: parse else with print_block
-      break;
-    case Expr_kind::lambda:
-      PAREN_BLOCK(this->append("lambda"_sv, padding::right);
-                  RPAD_PAREN_BLOCK(this->pprint(CADR(exp));); this->pprint(
-                      CDDR(exp)););  // FIXME: nested paren_block
-                                     // TODO: maybe this is a print_block?
-      break;
-    case Expr_kind::named_lambda:
-      PAREN_BLOCK(this->append("named-lambda"_sv, padding::right);
-                  this->append(CAADR(exp).atom().as_string());
-                  this->pprint(CDADR(exp)); this->pprint(CDDR(exp)););
-      break;
-    case Expr_kind::define:
-      PAREN_BLOCK(this->append("define"_sv, padding::right);
-                  this->append(CAADR(exp).atom().as_string());
-                  this->pprint(CDADR(exp)); this->pprint(CDDR(exp)););
-      break;
-    case Expr_kind::begin: {
-      PAREN_BLOCK(this->append("begin"_sv, padding::right);
-                  this->print_block(exp););
-      break;
-    }
-    case Expr_kind::set:
-      PAREN_BLOCK(this->append("set!"_sv, padding::right);
-                  this->append(CADR(exp).atom().as_string());
-                  this->pprint(CADDR(exp)););
       break;
     default:
       PAREN_BLOCK(this->pprint(CAR(exp), padding::right);
                   this->print_block(CDR(exp)););
       break;
     }
+  }
+}
+
+void printer::print_syntactic_keyword(Expr exp, padding pad) {
+  switch (CAR(exp).atom().type()) {
+  case token_t::quote:
+    PAREN_BLOCK(this->append("quote"_sv, padding::right);
+                this->pprint(CDR(exp), pad););
+    break;
+  case token_t::if_:
+    PAREN_BLOCK(this->append("if"_sv, padding::right);
+                RPAD_PAREN_BLOCK(this->pprint(CADR(exp)));
+                RPAD_WS_BLOCK(this->pprint(CADDR(exp))); this->pprint(
+                    CADDDR(exp)););  // TODO: parse else with print_block
+    break;
+  case token_t::lambda:
+    PAREN_BLOCK(this->append("lambda"_sv, padding::right);
+                RPAD_PAREN_BLOCK(this->pprint(CADR(exp)););
+                this->pprint(CDDR(exp)););  // FIXME: nested paren_block
+    // TODO: maybe this is a print_block?
+    break;
+  case token_t::named_lambda:
+    PAREN_BLOCK(this->append("named-lambda"_sv, padding::right);
+                this->append(CAADR(exp).atom().as_string());
+                this->pprint(CDADR(exp)); this->pprint(CDDR(exp)););
+    break;
+  case token_t::define:
+    PAREN_BLOCK(this->append("define"_sv, padding::right);
+                this->append(CAADR(exp).atom().as_string());
+                this->pprint(CDADR(exp)); this->pprint(CDDR(exp)););
+    break;
+  case token_t::begin: {
+    PAREN_BLOCK(this->append("begin"_sv, padding::right);
+                this->print_block(exp););
+    break;
+  }
+  case token_t::set:
+    PAREN_BLOCK(this->append("set!"_sv, padding::right);
+                this->append(CADR(exp).atom().as_string());
+                this->pprint(CADDR(exp)););
+    break;
+  default:
+    PAREN_BLOCK(this->pprint(CAR(exp), padding::right);
+                this->print_block(CDR(exp)););
+    break;
   }
 }
 

@@ -15,17 +15,23 @@ class Atom {
   Atom(token tok) : m_token(tok){};
   Atom(token_t type, location loc) : m_token(token(type, loc)){};
   Atom(token_t type, string_view sv) : m_token(token(type, sv)){};
+  Atom(token_t type) : m_token(token(type)){};
   Atom(string_view sv) : m_token(token(token_t::symbol, sv)){};
   Atom(int i)
       : is_evaluated(true), m_token(token(token_t::integer)), m_value_int(i){};
   Atom(double f)
       : is_evaluated(true), m_token(token(token_t::float_)), m_value_float(f){};
+  Atom(bool cond)
+      : is_evaluated(true),
+        m_token(cond ? token(token_t::true_, "#t"_sv)
+                     : token(token_t::false_, "#f"_sv)){};
 
   token token_() const { return m_token; }
   token_t type() const { return m_token.type; }
   string_view as_string() const { return m_token.as_string(); }
   int as_int() const { return m_value_int; }
   double as_float() const { return m_value_float; }
+  bool as_bool() const { return m_value_bool; }
 
   bool operator==(const Atom& a) const {
     return this->type() == a.type() && this->as_string() == a.as_string();
@@ -41,6 +47,7 @@ class Atom {
   token m_token;
   int m_value_int;
   double m_value_float;
+  bool m_value_bool;
 };
 
 enum Expr_kind {
@@ -49,32 +56,13 @@ enum Expr_kind {
   atom,
   cons,
 
-  car,
-  cdr,
-  cons_,
-
-  begin,
   character,
-  define,
   function,
-  false_,
-  if_,
-  lambda,
-  list,
-  append,
-  let,
-  let_star,
-  letrec,
-  letrec_star,
-  named_lambda,
   procedure,
-  quote,
   quote_abbrev,
   quasiquote,
   unquote,
   unquote_splicing,
-  set,
-  true_,
 };
 
 class Cons;
@@ -88,8 +76,7 @@ class Expr {
   explicit Expr(token token_) : Expr(Atom(token_)){};
   explicit Expr(int i) : Expr(Atom(i)){};
   explicit Expr(double f) : Expr(Atom(f)){};
-  explicit Expr(bool cond)
-      : m_kind(cond ? Expr_kind::true_ : Expr_kind::false_){};
+  explicit Expr(bool cond) : Expr(Atom(cond)){};
   explicit Expr(Expr_kind kind, Atom atom) : m_kind(kind), m_atom(atom){};
   explicit Expr(Expr_kind kind, Cons* cons) : m_kind(kind), m_cons(cons){};
   explicit Expr(Procedure* proc) : m_kind(Expr_kind::procedure), m_proc(proc){};
@@ -101,8 +88,8 @@ class Expr {
   Cons* cons() const { return m_cons; }
   Procedure* proc() const { return m_proc; }
 
-  static Expr nil() { return Expr(Expr_kind::nil); }
-  static Expr err() { return Expr(Expr_kind::err); }
+  static Expr nil() { return Expr(Expr_kind::nil, "()"_sv); }
+  static Expr err() { return Expr(Expr_kind::err, "ERROR!!!"_sv); }
 
  private:
   Expr_kind m_kind;

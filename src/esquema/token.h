@@ -15,6 +15,19 @@ enum class token_t {
   cdr,
   cons,
 
+  is_boolean,     // TODO
+  is_char,        // TODO
+  is_null,        // TODO
+  is_pair,        // TODO
+  is_procedure,   // TODO
+  is_symbol,      // TODO
+  is_bytevector,  // TODO
+  is_eof_object,  // TODO
+  is_number,      // TODO
+  is_port,        // TODO
+  is_string,      // TODO
+  is_vector,      // TODO
+
   begin,
   define,
   false_,
