@@ -216,6 +216,12 @@ TEST(test, letrec) {
             "(letrec ((zero? (lambda (n) (= 0 n))) (even? (lambda (n) (if (zero? n) #t (odd? (- n 1))))) (odd? (lambda (n) (if (zero? n) #f (even? (- n 1)))))) (even? 88))"_sv),
         "#t"_sv);
   }
+  EXPECT_EQ(pprint("(let ((x 5)) (define foo (lambda (y) (bar x y))) (define "
+                   "bar (lambda (a b) (+ (* a b) a))) (foo (+ x 3)))"),
+            "45");
+  EXPECT_EQ(pprint("(let ((x 5)) (letrec* ((foo (lambda (y) (bar x y))) (bar "
+                   "(lambda (a b) (+ (* a b) a)))) (foo (+ x 3))))"),
+            "45");
 }
 
 TEST(test, recursion) {
@@ -223,7 +229,6 @@ TEST(test, recursion) {
     EXPECT_EQ(pprint("(begin (define (fib n) (if (<= n 2) 1 (+ (fib (- n 1))"
                      "(fib (- n 2))))) (fib 8))"),
               "21");
-
     EXPECT_EQ(pprint("(begin (define (fact n) (if (= n 1) 1 (* n (fact (- n 1) "
                      ")))) (fact 5))"),
               "120");
