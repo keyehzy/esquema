@@ -211,6 +211,8 @@ end:
     t.type = token_t::is_boolean;
   } else if (t.as_string() == "null?"_sv) {
     t.type = token_t::is_null;
+  } else if (t.as_string() == "pair?"_sv) {
+    t.type = token_t::is_pair;
   }
 
   return t;

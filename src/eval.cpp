@@ -65,6 +65,10 @@ Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
     Expr e = this->eval(CDR(exp), env);
     return Expr(e.kind() == Expr_kind::nil);
   }
+  case token_t::is_pair: {
+    Expr e = this->eval(CDR(exp), env);
+    return Expr(e.kind() == Expr_kind::cons);
+  }
 
   case token_t::if_:
     if (eval(CADR(exp), env).atom().type() != token_t::false_) {

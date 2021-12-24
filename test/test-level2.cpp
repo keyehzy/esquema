@@ -251,16 +251,19 @@ TEST(test, car_cdr_cons) {
   { EXPECT_EQ(pprint("(cons 'a (cdr '((b) c d))) "_sv), "(a c d)"_sv); }
 }
 
-TEST(test, predicates) { {{EXPECT_EQ(pprint("(boolean? #t)"_sv), "#t"_sv); }
-{ EXPECT_EQ(pprint("(boolean? #f)"_sv), "#t"_sv); }
-{ EXPECT_EQ(pprint("(boolean? 1)"_sv), "#f"_sv); }
-{ EXPECT_EQ(pprint("(boolean? 'foo)"_sv), "#f"_sv); }
-}
+TEST(test, predicates) {
+  { EXPECT_EQ(pprint("(boolean? #t)"_sv), "#t"_sv); }
+  { EXPECT_EQ(pprint("(boolean? #f)"_sv), "#t"_sv); }
+  { EXPECT_EQ(pprint("(boolean? 1)"_sv), "#f"_sv); }
+  { EXPECT_EQ(pprint("(boolean? 'foo)"_sv), "#f"_sv); }
 
-{
   { EXPECT_EQ(pprint("(null? '())"_sv), "#t"_sv); }
   { EXPECT_EQ(pprint("(null? (list))"_sv), "#t"_sv); }
   { EXPECT_EQ(pprint("(null? 2)"_sv), "#f"_sv); }
   { EXPECT_EQ(pprint("(null? 'foo)"_sv), "#f"_sv); }
-}
+
+  { EXPECT_EQ(pprint("(pair? '(1 2))"_sv), "#t"_sv); }
+  { EXPECT_EQ(pprint("(pair? (list 1 2))"_sv), "#t"_sv); }
+  { EXPECT_EQ(pprint("(pair? 'foo)"_sv), "#f"_sv); }
+  { EXPECT_EQ(pprint("(pair? 1)"_sv), "#f"_sv); }
 }
