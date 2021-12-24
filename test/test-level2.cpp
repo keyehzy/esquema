@@ -229,3 +229,24 @@ TEST(test, recursion) {
               "120");
   }
 }
+
+TEST(test, car_cdr_cons) {
+  { EXPECT_EQ(pprint("(car '(1 2))"_sv), "1"_sv); }
+  { EXPECT_EQ(pprint("(car '((+ 1 2) 4))"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("(car (list 1 2))"_sv), "1"_sv); }
+  { EXPECT_EQ(pprint("(car (list (+ 1 2) 4))"_sv), "3"_sv); }
+
+  { EXPECT_EQ(pprint("(cdr '(1 2))"_sv), "2"_sv); }
+  { EXPECT_EQ(pprint("(cdr '(4 (+ 1 2)))"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("(cdr (list 1 2))"_sv), "2"_sv); }
+  { EXPECT_EQ(pprint("(cdr (list 4 (+ 1 2)))"_sv), "3"_sv); }
+
+  { EXPECT_EQ(pprint("(car (cdr '((b) (x y) ((c)))))"_sv), "(x y)"_sv); }
+  { EXPECT_EQ(pprint("(cdr (cdr '((b) (x y) ((c)))))"_sv), "c"_sv); }
+
+  { EXPECT_EQ(pprint("(cons 'a '())"_sv), "a"_sv); }
+  { EXPECT_EQ(pprint("(cons '(a b (c)) '())"_sv), "(a b c)"_sv); }
+
+  { EXPECT_EQ(pprint("(cons 'a (car '((b) c d)))"_sv), "(a b)"_sv); }
+  { EXPECT_EQ(pprint("(cons 'a (cdr '((b) c d))) "_sv), "(a c d)"_sv); }
+}

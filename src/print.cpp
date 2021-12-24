@@ -118,7 +118,7 @@ void printer::print_cons(Expr exp, padding pad = padding::none) {
 
 void printer::print_block(Expr exp) {
   Expr head = exp;
-  while (head.kind() != Expr_kind::nil) {
+  while (head.kind() == Expr_kind::cons) {
     if (CDR(head).kind() != Expr_kind::nil)
       this->pprint(CAR(head), padding::right);
     else

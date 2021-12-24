@@ -55,6 +55,8 @@ Expr parser::parse_head() {
     if (unquote_splicing.kind() == Expr_kind::err) return unquote_splicing;
     return this->make_list2(unquote_splicing_exp, unquote_splicing);
   }
+  // NOTE: I think these can be treated as symbols and handled seperately inside
+  // eval function
   case token_t::let:
     return this->parse_single_token(Expr_kind::let);
   case token_t::let_star:
@@ -85,6 +87,12 @@ Expr parser::parse_head() {
     return this->parse_single_token(Expr_kind::list);
   case token_t::append:
     return this->parse_single_token(Expr_kind::append);
+  case token_t::car:
+    return this->parse_single_token(Expr_kind::car);
+  case token_t::cdr:
+    return this->parse_single_token(Expr_kind::cdr);
+  case token_t::cons:
+    return this->parse_single_token(Expr_kind::cons_);
   case token_t::eof:
     return Expr::nil();
   default:

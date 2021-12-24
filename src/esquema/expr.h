@@ -49,6 +49,10 @@ enum Expr_kind {
   atom,
   cons,
 
+  car,
+  cdr,
+  cons_,
+
   begin,
   character,
   define,

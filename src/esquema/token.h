@@ -11,6 +11,10 @@ enum class token_t {
   string,
   character,
 
+  car,
+  cdr,
+  cons,
+
   begin,
   define,
   false_,

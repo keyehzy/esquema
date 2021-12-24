@@ -201,6 +201,12 @@ end:
     t.type = token_t::list;
   } else if (t.as_string() == "append"_sv) {
     t.type = token_t::append;
+  } else if (t.as_string() == "car"_sv) {
+    t.type = token_t::car;
+  } else if (t.as_string() == "cdr"_sv) {
+    t.type = token_t::cdr;
+  } else if (t.as_string() == "cons"_sv) {
+    t.type = token_t::cons;
   }
 
   return t;

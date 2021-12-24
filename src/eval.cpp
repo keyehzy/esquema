@@ -22,6 +22,17 @@ Expr evaluator::eval(Expr exp, Env& env) {
       return eval(CAR(exp), env);
     } else {
       switch (CAR(exp).kind()) {
+      case Expr_kind::car:
+        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+        return CAR(this->eval(CDR(exp), env));
+      case Expr_kind::cdr:
+        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+        return CDR(this->eval(CDR(exp), env));
+      case Expr_kind::cons_:
+        ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
+        // TODO: the code (cons 'a 'b) is invalid because 'b is not a list
+        return Cons::expr(this->eval(CADR(exp), env),
+                          this->eval(CDDR(exp), env));
       case Expr_kind::quote:
       case Expr_kind::quote_abbrev:
         return CADR(exp);
