@@ -13,6 +13,8 @@ class evaluator {
   Expr eval(Expr, Env&);
   Expr eval_atom(Expr, Env&);
   Expr eval_define(Expr, Env&);
+  Expr eval_let(Expr, Env&);
+  Expr eval_letrec(Expr, Env&);
   Expr lookup_symbol(Expr, Env);
   Expr eprogn(Expr, Env&);
   Expr set(Atom, Expr, Env&);

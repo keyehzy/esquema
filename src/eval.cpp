@@ -49,27 +49,6 @@ Expr evaluator::eval(Expr exp, Env& env) {
         return Expr(new Procedure(/*symbol=*/CAADR(exp).atom(),
                                   /*params=*/CDADR(exp), /*body=*/CDDR(exp),
                                   env));
-      case Expr_kind::let: {
-        bool was_already_inside_lambda = is_inside_lambda;
-        is_inside_lambda = true;
-
-        Expr variable_inits = CADR(exp);
-        Expr body = CDDR(exp);
-        Env let_env;
-        let_env.extend_from(env);
-        Expr it = variable_inits;
-        while (it.kind() != Expr_kind::nil) {
-          Expr variable = CAAR(it);
-          Expr init = CADAR(it);
-          Expr value = this->eval(init, env);
-          this->bind_variable(variable, value, let_env);
-          it = CDR(it);
-        }
-        Expr result = this->eprogn(body, let_env);
-        is_inside_lambda = was_already_inside_lambda;
-        return result;
-      }
-
       case Expr_kind::list:
         if (CDR(exp).kind() == Expr_kind::nil) return CDR(exp);
         ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
@@ -79,66 +58,15 @@ Expr evaluator::eval(Expr exp, Env& env) {
         ESQUEMA_ASSERT(CDDR(exp).kind() == Expr_kind::cons);
         return this->append_list(this->eval(CADR(exp), env), CDDR(exp), env);
 
-      // The difference between these two, as fair as I understand, is
-      // just in the order of evaluation, maybe allowing some
-      // optimizations.
-      case Expr_kind::letrec: {
+      case Expr_kind::let:
+      case Expr_kind::let_star:
+        return this->eval_let(exp, env);
+
+      // NOTE: The difference between these two, as fair as I understand, is
+      // just in the order of evaluation, maybe allowing some optimizations.
+      case Expr_kind::letrec:
       case Expr_kind::letrec_star:
-        bool was_already_inside_lambda = is_inside_lambda;
-        is_inside_lambda = true;
-
-        Expr variable_inits = CADR(exp);
-        Expr body = CDDR(exp);
-        Env extended_env;
-        extended_env.extend_from(env);
-
-        // 1) The variables are bound to fresh locations holding unassigned
-        // values, the inits are evaluated in the extended environment
-        Expr it = variable_inits;
-        while (it.kind() != Expr_kind::nil) {
-          Expr variable = CAAR(it);
-          this->bind_variable(variable, Expr::nil(), extended_env);
-          it = CDR(it);
-        }
-
-        // 2) each variable is assigned to the result of the corresponding
-        // init
-        it = variable_inits;
-        while (it.kind() != Expr_kind::nil) {
-          Expr variable = CAAR(it);
-          Expr init = CADAR(it);
-          Expr value = this->eval(init, extended_env);
-          this->set(variable.atom(), value, extended_env);
-          it = CDR(it);
-        }
-
-        // 3) the exprs are evaluated sequentially in the extended
-        // environment, and the value of the last expr is returned
-        Expr result = this->eprogn(body, extended_env);
-        is_inside_lambda = was_already_inside_lambda;
-        return result;
-      }
-
-      case Expr_kind::let_star: {
-        bool was_already_inside_lambda = is_inside_lambda;
-        is_inside_lambda = true;
-
-        Expr variable_inits = CADR(exp);
-        Expr body = CDDR(exp);
-        Env let_env;
-        let_env.extend_from(env);
-        Expr it = variable_inits;
-        while (it.kind() != Expr_kind::nil) {
-          Expr variable = CAAR(it);
-          Expr init = CADAR(it);
-          Expr value = this->eval(init, let_env);
-          this->bind_variable(variable, value, let_env);
-          it = CDR(it);
-        }
-        Expr result = this->eprogn(body, let_env);
-        is_inside_lambda = was_already_inside_lambda;
-        return result;
-      }
+        return this->eval_letrec(exp, env);
 
       case Expr_kind::define:
         return this->eval_define(exp, env);
@@ -162,6 +90,64 @@ Expr evaluator::eval(Expr exp, Env& env) {
     return Expr::err();
   }
   ESQUEMA_NOT_REACHED();
+}
+
+Expr evaluator::eval_letrec(Expr exp, Env& env) {
+  bool was_already_inside_lambda = is_inside_lambda;
+  is_inside_lambda = true;
+
+  Expr variable_inits = CADR(exp);
+  Expr body = CDDR(exp);
+  Env extended_env;
+  extended_env.extend_from(env);
+
+  // 1) The variables are bound to fresh locations holding unassigned
+  // values, the inits are evaluated in the extended environment
+  Expr it = variable_inits;
+  while (it.kind() != Expr_kind::nil) {
+    Expr variable = CAAR(it);
+    this->bind_variable(variable, Expr::nil(), extended_env);
+    it = CDR(it);
+  }
+
+  // 2) each variable is assigned to the result of the corresponding
+  // init
+  it = variable_inits;
+  while (it.kind() != Expr_kind::nil) {
+    Expr variable = CAAR(it);
+    Expr init = CADAR(it);
+    Expr value = this->eval(init, extended_env);
+    this->set(variable.atom(), value, extended_env);
+    it = CDR(it);
+  }
+
+  // 3) the exprs are evaluated sequentially in the extended
+  // environment, and the value of the last expr is returned
+  Expr result = this->eprogn(body, extended_env);
+  is_inside_lambda = was_already_inside_lambda;
+  return result;
+}
+
+Expr evaluator::eval_let(Expr exp, Env& env) {
+  bool was_already_inside_lambda = is_inside_lambda;
+  is_inside_lambda = true;
+
+  Expr variable_inits = CADR(exp);
+  Expr body = CDDR(exp);
+  Env let_env;
+  let_env.extend_from(env);
+  Expr it = variable_inits;
+  while (it.kind() != Expr_kind::nil) {
+    Expr variable = CAAR(it);
+    Expr init = CADAR(it);
+    Expr value = CAR(exp).kind() == Expr_kind::let ? this->eval(init, env)
+                                                   : this->eval(init, let_env);
+    this->bind_variable(variable, value, let_env);
+    it = CDR(it);
+  }
+  Expr result = this->eprogn(body, let_env);
+  is_inside_lambda = was_already_inside_lambda;
+  return result;
 }
 
 /*
