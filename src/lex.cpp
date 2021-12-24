@@ -215,6 +215,8 @@ end:
     t.type = token_t::is_pair;
   } else if (t.as_string() == "procedure?"_sv) {
     t.type = token_t::is_procedure;
+  } else if (t.as_string() == "symbol?"_sv) {
+    t.type = token_t::is_symbol;
   }
 
   return t;

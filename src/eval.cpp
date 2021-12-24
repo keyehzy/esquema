@@ -75,6 +75,13 @@ Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
     return Expr(e.kind() == Expr_kind::procedure);
   }
 
+  // TODO: we need a way to differentiate between syntactic keywords and symbols
+  case token_t::is_symbol: {
+    Expr e = this->eval(CDR(exp), env);
+    return Expr(e.kind() == Expr_kind::atom &&
+                e.atom().type() == token_t::symbol);
+  }
+
   case token_t::if_:
     if (eval(CADR(exp), env).atom().type() != token_t::false_) {
       return eval(CADDR(exp), env);

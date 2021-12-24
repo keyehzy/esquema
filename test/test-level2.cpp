@@ -274,10 +274,16 @@ TEST(test, predicates) {
         pprint(
             "(begin (define foo (named-lambda (bar x) x)) (procedure? foo))"_sv),
         "#t"_sv);
-    EXPECT_EQ(pprint("(begin (procedure? +))"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(procedure? +)"_sv), "#t"_sv);
     EXPECT_EQ(pprint("(procedure? 1)"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(procedure? 'foo)"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(procedure? '())"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(procedure? (list 1))"_sv), "#f"_sv);
+
+    EXPECT_EQ(pprint("(symbol? 'foo)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(symbol? 1)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(symbol? '())"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(symbol? '(foo bar))"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(symbol? +)"_sv), "#f"_sv);
   }
 }

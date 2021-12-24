@@ -20,7 +20,7 @@ enum class token_t {
   is_null,
   is_pair,
   is_procedure,
-  is_symbol,      // TODO
+  is_symbol,
   is_bytevector,  // TODO
   is_eof_object,  // TODO
   is_number,      // TODO

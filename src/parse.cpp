@@ -54,6 +54,7 @@ Expr parser::parse_head() {
   case token_t::is_null:
   case token_t::is_pair:
   case token_t::is_procedure:
+  case token_t::is_symbol:
   case token_t::car:
   case token_t::cdr:
   case token_t::cons:
