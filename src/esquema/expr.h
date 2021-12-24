@@ -15,7 +15,6 @@ class Atom {
   Atom(token tok) : m_token(tok){};
   Atom(token_t type, location loc) : m_token(token(type, loc)){};
   Atom(token_t type, string_view sv) : m_token(token(type, sv)){};
-  Atom(token_t type) : m_token(token(type)){};
   Atom(string_view sv) : m_token(token(token_t::symbol, sv)){};
   Atom(int i)
       : is_evaluated(true), m_token(token(token_t::integer)), m_value_int(i){};
@@ -31,7 +30,6 @@ class Atom {
   string_view as_string() const { return m_token.as_string(); }
   int as_int() const { return m_value_int; }
   double as_float() const { return m_value_float; }
-  bool as_bool() const { return m_value_bool; }
 
   bool operator==(const Atom& a) const {
     return this->type() == a.type() && this->as_string() == a.as_string();
@@ -47,7 +45,6 @@ class Atom {
   token m_token;
   int m_value_int;
   double m_value_float;
-  bool m_value_bool;
 };
 
 enum Expr_kind {
@@ -80,7 +77,6 @@ class Expr {
   explicit Expr(Expr_kind kind, Atom atom) : m_kind(kind), m_atom(atom){};
   explicit Expr(Expr_kind kind, Cons* cons) : m_kind(kind), m_cons(cons){};
   explicit Expr(Procedure* proc) : m_kind(Expr_kind::procedure), m_proc(proc){};
-  explicit Expr(Expr_kind kind) : m_kind(kind){};
 
   Expr_kind kind() const { return m_kind; }
   Atom atom() const { return m_atom; }
