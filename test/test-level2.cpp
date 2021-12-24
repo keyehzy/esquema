@@ -251,6 +251,7 @@ TEST(test, car_cdr_cons) {
   { EXPECT_EQ(pprint("(cons 'a (cdr '((b) c d))) "_sv), "(a c d)"_sv); }
 }
 
+// TODO: check against each and every other type
 TEST(test, predicates) {
   { EXPECT_EQ(pprint("(boolean? #t)"_sv), "#t"_sv); }
   { EXPECT_EQ(pprint("(boolean? #f)"_sv), "#t"_sv); }
@@ -285,5 +286,19 @@ TEST(test, predicates) {
     EXPECT_EQ(pprint("(symbol? '())"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(symbol? '(foo bar))"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(symbol? +)"_sv), "#f"_sv);
+
+    EXPECT_EQ(pprint("(number? 42)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(number? 4.20)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(number? 'foo)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(number? '())"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(number? '(foo bar))"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(number? +)"_sv), "#f"_sv);
+
+    EXPECT_EQ(pprint("(string? \"foo\")"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(string? 1)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(string? 'foo)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(string? '())"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(string? '(foo bar))"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(string? +)"_sv), "#f"_sv);
   }
 }

@@ -217,6 +217,10 @@ end:
     t.type = token_t::is_procedure;
   } else if (t.as_string() == "symbol?"_sv) {
     t.type = token_t::is_symbol;
+  } else if (t.as_string() == "number?"_sv) {
+    t.type = token_t::is_number;
+  } else if (t.as_string() == "string?"_sv) {
+    t.type = token_t::is_string;
   }
 
   return t;

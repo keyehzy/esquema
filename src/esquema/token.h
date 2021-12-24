@@ -23,10 +23,10 @@ enum class token_t {
   is_symbol,
   is_bytevector,  // TODO
   is_eof_object,  // TODO
-  is_number,      // TODO
-  is_port,        // TODO
-  is_string,      // TODO
-  is_vector,      // TODO
+  is_number,
+  is_port,  // TODO
+  is_string,
+  is_vector,  // TODO
 
   begin,
   define,
