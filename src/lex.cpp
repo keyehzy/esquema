@@ -207,6 +207,8 @@ end:
     t.type = token_t::cdr;
   } else if (t.as_string() == "cons"_sv) {
     t.type = token_t::cons;
+  } else if (t.as_string() == "boolean?"_sv) {
+    t.type = token_t::is_boolean;
   }
 
   return t;
