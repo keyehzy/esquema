@@ -209,6 +209,8 @@ end:
     t.type = token_t::cons;
   } else if (t.as_string() == "boolean?"_sv) {
     t.type = token_t::is_boolean;
+  } else if (t.as_string() == "null?"_sv) {
+    t.type = token_t::is_null;
   }
 
   return t;

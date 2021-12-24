@@ -16,8 +16,8 @@ enum class token_t {
   cons,
 
   is_boolean,
-  is_char,        // TODO
-  is_null,        // TODO
+  is_char,  // TODO
+  is_null,
   is_pair,        // TODO
   is_procedure,   // TODO
   is_symbol,      // TODO
