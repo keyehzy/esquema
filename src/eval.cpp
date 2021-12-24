@@ -96,6 +96,12 @@ Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
                 e.atom().type() == token_t::string);
   }
 
+  case token_t::is_char: {
+    Expr e = this->eval(CDR(exp), env);
+    return Expr(e.kind() == Expr_kind::atom &&
+                e.atom().type() == token_t::character);
+  }
+
   case token_t::if_:
     if (eval(CADR(exp), env).atom().type() != token_t::false_) {
       return eval(CADDR(exp), env);

@@ -57,6 +57,7 @@ Expr parser::parse_head() {
   case token_t::is_symbol:
   case token_t::is_number:
   case token_t::is_string:
+  case token_t::is_char:
   case token_t::car:
   case token_t::cdr:
   case token_t::cons:

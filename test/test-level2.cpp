@@ -300,5 +300,12 @@ TEST(test, predicates) {
     EXPECT_EQ(pprint("(string? '())"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(string? '(foo bar))"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(string? +)"_sv), "#f"_sv);
+
+    EXPECT_EQ(pprint("(char? #\a)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(char? 1)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(char? 'foo)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(char? '())"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(char? '(foo bar))"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(char? +)"_sv), "#f"_sv);
   }
 }

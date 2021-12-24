@@ -70,6 +70,7 @@ token lexer::parse_character() {
     return token(token_t::character, begin, it + 1);
   // TODO: implement
   // https://groups.csail.mit.edu/mac/ftpdir/scheme-7.4/doc-html/scheme_6.html
+  // Section 4.4 https://small.r7rs.org/attachment/r7rs.pdf
   case 't':
     ++it;
     m_input = it;
@@ -79,7 +80,9 @@ token lexer::parse_character() {
     m_input = it;
     return token(token_t::false_, begin, it);
   default:
-    return token(token_t::err, begin, it);
+    ++it;
+    m_input = it;
+    return token(token_t::character, begin, it);
   }
 }
 
@@ -221,6 +224,8 @@ end:
     t.type = token_t::is_number;
   } else if (t.as_string() == "string?"_sv) {
     t.type = token_t::is_string;
+  } else if (t.as_string() == "char?"_sv) {
+    t.type = token_t::is_char;
   }
 
   return t;
