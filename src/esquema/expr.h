@@ -68,6 +68,7 @@ enum Expr_kind {
   quote_abbrev,
   quasiquote,
   unquote,
+  unquote_splicing,
   set,
   true_,
 };

@@ -30,7 +30,7 @@ Expr parser::parse_head() {
     Expr quoted = this->parse_head();
     // TODO: check for errors
     if (quoted.kind() == Expr_kind::err) return quoted;
-    return Expr(new Cons(quote_exp, Expr(new Cons(quoted, Expr::nil()))));
+    return this->make_list2(quote_exp, quoted);
   }
   case token_t::quasiquote: {  // TODO: is there cases like ', ',@ etc?
     this->parse_single_token(Expr_kind::quasiquote);
@@ -41,11 +41,19 @@ Expr parser::parse_head() {
     return expanded;
   }
   case token_t::unquote: {
-    Expr quote_exp = this->parse_single_token(Expr_kind::unquote);
-    Expr quoted = this->parse_head();
+    Expr unquote_exp = this->parse_single_token(Expr_kind::unquote);
+    Expr unquoted = this->parse_head();
     // TODO: check for errors
-    if (quoted.kind() == Expr_kind::err) return quoted;
-    return Expr(new Cons(quote_exp, Expr(new Cons(quoted, Expr::nil()))));
+    if (unquoted.kind() == Expr_kind::err) return unquoted;
+    return this->make_list2(unquote_exp, unquoted);
+  }
+  case token_t::unquote_splicing: {
+    Expr unquote_splicing_exp =
+        this->parse_single_token(Expr_kind::unquote_splicing);
+    Expr unquote_splicing = this->parse_head();
+    // TODO: check for errors
+    if (unquote_splicing.kind() == Expr_kind::err) return unquote_splicing;
+    return this->make_list2(unquote_splicing_exp, unquote_splicing);
   }
   case token_t::let:
     return this->parse_single_token(Expr_kind::let);
@@ -130,7 +138,9 @@ Expr parser::qq_expand_list(Expr list) {
   case Expr_kind::cons:
     if (CAR(list).kind() == unquote) {
       return this->make_list2(Expr(Expr_kind::list), CADR(list));
-    } else {  // TODO: commaat
+    } else if (CAR(list).kind() == unquote_splicing) {
+      return CADR(list);
+    } else {
       Expr expand_car = qq_expand_list(CAR(list));
       Expr expand_cdr = qq_expand(CDR(list));
       return this->make_list2(Expr(Expr_kind::list),
@@ -149,7 +159,9 @@ Expr parser::qq_expand(Expr quoted) {
   case Expr_kind::cons:
     if (CAR(quoted).kind() == Expr_kind::unquote) {
       return CADR(quoted);
-    } else {  // TODO: commaat case
+    } else if (CAR(quoted).kind() == Expr_kind::unquote_splicing) {
+      ESQUEMA_ERROR("Ilegal unquote-splicing after quasiquote");
+    } else {
       Expr expand_car = this->qq_expand_list(CAR(quoted));
       Expr expand_cdr = this->qq_expand(CDR(quoted));
       return this->append(expand_car, expand_cdr);

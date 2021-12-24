@@ -128,12 +128,17 @@ TEST(test, list) {
 
 TEST(test, quasiquote) {
   { EXPECT_EQ(pprint("`(+ 1 2)"_sv), "(+ 1 2)"_sv); }
+  { EXPECT_EQ(pprint("`,(+ 1 2)"_sv), "3"_sv); }
   { EXPECT_EQ(pprint("`(+ 1 ,(+ 1 2))"_sv), "(+ 1 3)"_sv); }
   { EXPECT_EQ(pprint("`(list 1 2)"_sv), "(list 1 2)"_sv); }
   { EXPECT_EQ(pprint("`(list ,(+ 1 2) 4)"_sv), "(list 3 4)"_sv); }
   {
     EXPECT_EQ(pprint("(let ((name 'a)) `(list ,name ',name))"_sv),
               "(list a (quote a))"_sv);
+  }
+  {
+    EXPECT_EQ(pprint("(let ((foo '(foo bar))) `(list ,@foo))"_sv),
+              "(list foo bar)"_sv);
   }
 }
 

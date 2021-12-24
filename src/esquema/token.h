@@ -29,6 +29,7 @@ enum class token_t {
   quote_abbrev,
   quasiquote,
   unquote,
+  unquote_splicing,
   right_paren,
   set,
   true_,

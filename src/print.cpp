@@ -54,6 +54,9 @@ void printer::pprint(Expr exp, padding pad = padding::none) {
   case Expr_kind::unquote:
     this->append(","_sv, pad);
     break;
+  case Expr_kind::unquote_splicing:
+    this->append(",@"_sv, pad);
+    break;
   case Expr_kind::procedure:
     this->print_procedure(exp);
     break;

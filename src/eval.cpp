@@ -65,7 +65,6 @@ Expr evaluator::eval(Expr exp, Env& env) {
         return this->build_list(CDR(exp), env);
 
       case Expr_kind::append:
-        ESQUEMA_ASSERT(CADR(exp).kind() == Expr_kind::cons);
         ESQUEMA_ASSERT(CDDR(exp).kind() == Expr_kind::cons);
         return this->append_list(this->eval(CADR(exp), env), CDDR(exp), env);
 

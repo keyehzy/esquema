@@ -33,9 +33,17 @@ void lexer::parse_current_token() {
   case '`':
     m_last_token = this->parse_single_char_token(token_t::quasiquote);
     break;
-  case ',':
-    m_last_token = this->parse_single_char_token(token_t::unquote);
+  case ',': {
+    const char *begin = m_input;
+    ++m_input;
+    if (m_input[0] == '@') {
+      ++m_input;
+      m_last_token = token(token_t::unquote_splicing, begin, m_input);
+    } else {
+      m_last_token = token(token_t::unquote, begin, m_input);
+    }
     break;
+  }
   case '\"':
     m_last_token = this->parse_string_literal();
     break;

@@ -106,5 +106,6 @@ TEST(test, level1) {
         pprint_quoted("(`(1 ,a 3))"),
         "(append (quote 1 )(append (list a)(append (quote 3 )(quote ()))))");
   }
-  // { EXPECT_EQ(pprint_quoted("(,@(1 2 3))"), "((commaat ((1 (2 3)) nil)))"); }
+  { EXPECT_EQ(pprint_quoted("(,@(1 2 3))"), "(,@ (1 2 3))"); }
+  { EXPECT_EQ(pprint_quoted("`(,@(1 2 3))"), "(append (1 2 3)(quote ()))"); }
 }
