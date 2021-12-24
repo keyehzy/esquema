@@ -213,6 +213,8 @@ end:
     t.type = token_t::is_null;
   } else if (t.as_string() == "pair?"_sv) {
     t.type = token_t::is_pair;
+  } else if (t.as_string() == "procedure?"_sv) {
+    t.type = token_t::is_procedure;
   }
 
   return t;

@@ -70,6 +70,11 @@ Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
     return Expr(e.kind() == Expr_kind::cons);
   }
 
+  case token_t::is_procedure: {
+    Expr e = this->eval(CDR(exp), env);
+    return Expr(e.kind() == Expr_kind::procedure);
+  }
+
   case token_t::if_:
     if (eval(CADR(exp), env).atom().type() != token_t::false_) {
       return eval(CADDR(exp), env);

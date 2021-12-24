@@ -266,4 +266,18 @@ TEST(test, predicates) {
   { EXPECT_EQ(pprint("(pair? (list 1 2))"_sv), "#t"_sv); }
   { EXPECT_EQ(pprint("(pair? 'foo)"_sv), "#f"_sv); }
   { EXPECT_EQ(pprint("(pair? 1)"_sv), "#f"_sv); }
+
+  {
+    EXPECT_EQ(pprint("(begin (define foo (lambda (x) x)) (procedure? foo))"_sv),
+              "#t"_sv);
+    EXPECT_EQ(
+        pprint(
+            "(begin (define foo (named-lambda (bar x) x)) (procedure? foo))"_sv),
+        "#t"_sv);
+    EXPECT_EQ(pprint("(begin (procedure? +))"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(procedure? 1)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(procedure? 'foo)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(procedure? '())"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(procedure? (list 1))"_sv), "#f"_sv);
+  }
 }
