@@ -2,12 +2,11 @@
 
 #include "assert.h"
 #include "heap.h"
+#include "list.h"
 #include "token.h"
 #include <functional>
 #include <optional>
 #include <vector>
-
-static Heap arena(5 * MiB);
 
 class Atom {
  public:
@@ -115,94 +114,7 @@ class Cons {
   Expr cdr;
 };
 
-struct EnvNode {
-  explicit EnvNode(Atom symbol, Expr value)
-      : symbol(symbol), value(value), next(nullptr){};
-
-  static void* operator new(size_t size, Heap& heap = arena) {
-    return heap.allocate(size);
-  }
-
-  static void operator delete(void*) {}
-
-  // Used for testing only
-  static EnvNode* env(Atom symbol, Expr value, Heap& heap) {
-    return new (heap) EnvNode(symbol, value);
-  }
-
-  Atom symbol;
-  Expr value;
-  EnvNode* next;
-};
-
-class Env {
- public:
-  Env() : m_root(nullptr), m_last(nullptr), m_size(0){};
-
-  void add(Atom symbol, Expr value) {
-    EnvNode* node = new EnvNode(symbol, value);
-
-    if (m_root) {
-      m_last->next = node;
-      m_last = node;
-    } else {
-      m_root = node;
-      m_last = node;
-    }
-
-    m_size += 1;
-  }
-
-  EnvNode* get(int index) {
-    ESQUEMA_ASSERT(index < m_size);
-    EnvNode* it = m_root;
-    int pos = 0;
-    while (it != nullptr && pos < index) {
-      it = it->next;
-      pos += 1;
-    }
-    return it;
-  }
-
-  EnvNode* find(Atom symbol) {
-    EnvNode* it = m_root;
-    while (it != nullptr && it->symbol != symbol) {
-      it = it->next;
-    }
-    return it;
-  }
-
-  EnvNode* find_last(Atom symbol) {
-    EnvNode* it = m_root;
-    EnvNode* last = nullptr;
-    while (it != nullptr) {
-      if (it->symbol == symbol) last = it;
-      it = it->next;
-    }
-    return last;
-  }
-
-  void extend_from(const Env& env) {
-    EnvNode* it = env.m_root;
-    while (it != nullptr) {
-      this->add(it->symbol, it->value);
-      it = it->next;
-    }
-  }
-
-  void forEach(const std::function<void(const Atom&, const Expr&)>& operation) {
-    EnvNode* it = m_root;
-    while (it != nullptr) {
-      operation(it->symbol, it->value);
-      it = it->next;
-    }
-  }
-
- private:
-  EnvNode* m_root;
-  EnvNode* m_last;
-  int m_size;
-};
+typedef LinkedList<Atom, Expr> Env;
 
 // TODO: We want a general purpose linked list instead of stl containers
 typedef std::vector<Expr> List;

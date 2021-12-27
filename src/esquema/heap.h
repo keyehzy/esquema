@@ -30,3 +30,5 @@ class Heap {
   char* m_memory;
   bool m_malloced;
 };
+
+static Heap arena(5 * MiB);

@@ -329,9 +329,9 @@ Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
   // such a variable is an error. In either case, the value of the set!
   // expression is unspecified.
 
-  EnvNode* node = env.find_last(symbol);
+  auto* node = env.find_last(symbol);
   if (node != nullptr) {
-    node->value = new_val;
+    node->entry.value = new_val;
     return new_val;
   }
 
@@ -340,7 +340,7 @@ Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
   // unassigned when the set! form is entered.
   node = m_toplevel_env.find_last(symbol);
   if (node != nullptr) {
-    node->value = new_val;
+    node->entry.value = new_val;
     return new_val;
   }
 
@@ -348,25 +348,25 @@ Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
 }
 
 Expr evaluator::lookup_symbol(Expr symbol, Env env) {
-  EnvNode* node = m_protected_env.find_last(symbol.atom());
+  auto* node = m_protected_env.find_last(symbol.atom());
   if (node != nullptr) {
-    return node->value;
+    return node->entry.value;
   }
 
   node = env.find_last(symbol.atom());
   if (node != nullptr) {
-    if (node->value.kind() == Expr_kind::nil) {
+    if (node->entry.value.kind() == Expr_kind::nil) {
       return symbol;
     }
-    return node->value;
+    return node->entry.value;
   }
 
   node = m_toplevel_env.find_last(symbol.atom());
   if (node != nullptr) {
-    if (node->value.kind() == Expr_kind::nil) {
+    if (node->entry.value.kind() == Expr_kind::nil) {
       return symbol;
     }
-    return node->value;
+    return node->entry.value;
   }
 
   return symbol;  // autoquote
