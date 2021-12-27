@@ -14,7 +14,7 @@ struct Node {
   static void operator delete(void*) {}
 
   // Used for testing only
-  static Node* env(T key, U value, Heap& heap) {
+  static Node* create(T key, U value, Heap& heap) {
     return new (heap) Node(key, value);
   }
 
@@ -31,14 +31,6 @@ template <typename T, typename U>
 class LinkedList {
  public:
   LinkedList() = default;
-
-  // LinkedList(const LinkedList& list) {
-  //   auto* it = list.m_root;
-  //   while (it != nullptr) {
-  //     this->add(it->entry.key, it->entry.value);
-  //     it = it->next;
-  //   }
-  // }
 
   void add(T key, U value) {
     auto* node = new Node<T, U>(key, value);

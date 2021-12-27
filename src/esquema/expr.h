@@ -183,25 +183,25 @@ class Procedure {
   Env m_closing_env;
 };
 
-inline Expr CAR(const Expr& x) { return x.cons()->car; }
-inline Expr CAAR(const Expr& x) { return x.cons()->car.cons()->car; }
-inline Expr CADR(const Expr& x) { return x.cons()->cdr.cons()->car; }
-inline Expr CADAR(const Expr& x) {
+static inline Expr CAR(const Expr& x) { return x.cons()->car; }
+static inline Expr CDR(const Expr& x) { return x.cons()->cdr; }
+static inline Expr CADR(const Expr& x) { return x.cons()->cdr.cons()->car; }
+static inline Expr CDDR(const Expr& x) { return x.cons()->cdr.cons()->cdr; }
+static inline Expr CAAR(const Expr& x) { return x.cons()->car.cons()->car; }
+static inline Expr CDAR(const Expr& x) { return x.cons()->car.cons()->cdr; }
+
+static inline Expr CADAR(const Expr& x) {
   return x.cons()->car.cons()->cdr.cons()->car;
 }
-inline Expr CAADR(const Expr& x) {
+static inline Expr CAADR(const Expr& x) {
   return x.cons()->cdr.cons()->car.cons()->car;
 }
-inline Expr CADDR(const Expr& x) {
+static inline Expr CADDR(const Expr& x) {
   return x.cons()->cdr.cons()->cdr.cons()->car;
 }
-inline Expr CADDDR(const Expr& x) {
-  return x.cons()->cdr.cons()->cdr.cons()->cdr.cons()->car;
-}
-
-inline Expr CDR(const Expr& x) { return x.cons()->cdr; }
-inline Expr CDDR(const Expr& x) { return x.cons()->cdr.cons()->cdr; }
-inline Expr CDAR(const Expr& x) { return x.cons()->car.cons()->cdr; }
-inline Expr CDADR(const Expr& x) {
+static inline Expr CDADR(const Expr& x) {
   return x.cons()->cdr.cons()->car.cons()->cdr;
+}
+static inline Expr CADDDR(const Expr& x) {
+  return x.cons()->cdr.cons()->cdr.cons()->cdr.cons()->car;
 }
