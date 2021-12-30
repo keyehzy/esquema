@@ -3,8 +3,6 @@
 #include "expr.h"
 #include "parse.h"
 #include "string_view.h"
-#include <optional>
-#include <vector>
 
 class evaluator {
  public:
