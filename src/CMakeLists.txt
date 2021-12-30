@@ -14,6 +14,7 @@ add_library(
   esquema/native.h
   esquema/parse.h
   esquema/print.h
+  esquema/options.h
 
   assert.cpp
   eval.cpp
@@ -22,5 +23,6 @@ add_library(
   native.cpp
   parse.cpp
   print.cpp
+  options.cpp
 )
 target_include_directories(esquema-lib PUBLIC .)
