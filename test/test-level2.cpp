@@ -159,6 +159,23 @@ TEST(test, if_statement) {
   { EXPECT_EQ(pprint("((if #t = *) 3 4)"_sv), "#f"_sv); }
 }
 
+TEST(test, cond_statement) {
+  {
+    EXPECT_EQ(pprint("(cond ((> 3 2) 'greater) ((< 3 2) 'less))"_sv),
+              "greater"_sv);
+  }
+  {
+    EXPECT_EQ(
+        pprint("(cond ((> 3 3) 'greater) ((< 3 3) 'less) (else 'equal)"_sv),
+        "equal"_sv);
+  }
+  { EXPECT_EQ(pprint("(cond ((> 3 2) => 'greater))"_sv), "greater"_sv); }
+  {
+    EXPECT_EQ(pprint("(cond ((> 3 3) 'greater) (else => 'equal)"_sv),
+              "equal"_sv);
+  }
+}
+
 TEST(test, examples) {
   {
     EXPECT_EQ(pprint("(lambda (x) (+ x x))"_sv),

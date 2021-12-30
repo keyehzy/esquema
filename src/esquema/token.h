@@ -31,6 +31,7 @@ enum class token_t {
 
   begin,
   define,
+  cond,
   false_,
   function,
   if_,
@@ -51,6 +52,7 @@ enum class token_t {
   right_paren,
   set,
   true_,
+  arrow,
 };
 
 struct location {

@@ -112,6 +112,46 @@ Expr evaluator::eval_syntactic_keyword(const Expr& exp, Env& env) {
     return Expr(this->equal(lhs, rhs));
   }
 
+  case token_t::cond: {
+    Expr clauses = CDR(exp);
+
+    Expr head = clauses;
+
+    while (head.kind() == Expr_kind::cons) {
+      Expr clause = CAR(head);
+      Expr test = this->eval(CAR(clause), env);
+      Expr expressions = CDR(clause);
+
+      ESQUEMA_ASSERT(test.kind() == Expr_kind::atom);
+
+      auto eval_cond_clause = [&]() {
+        if (CAR(expressions).kind() == Expr_kind::atom &&
+            CAR(expressions).atom().type() == token_t::arrow) {
+          if (CDDR(expressions).kind() == Expr_kind::cons) {
+            ESQUEMA_ERROR(
+                "multiple expression after clause followed by arrow\n");
+          }
+          return this->eval(CADR(expressions), env);
+        }
+        return this->eprogn(expressions, env);
+      };
+
+      if (test.atom().as_string() == "else"_sv) {
+        if (CDR(head).kind() == Expr_kind::cons) {
+          ESQUEMA_ERROR("else clause not at the end of cond\n");
+        }
+        return eval_cond_clause();
+      }
+
+      if (test.atom().type() == token_t::true_) {
+        return eval_cond_clause();
+      }
+
+      head = CDR(head);
+    }
+    break;
+  }
+
   case token_t::if_:
     if (eval(CADR(exp), env).atom().type() != token_t::false_) {
       return eval(CADDR(exp), env);

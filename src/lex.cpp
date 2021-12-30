@@ -150,12 +150,32 @@ token lexer::parse_special_symbols() {
   case '+':
   case '-': {
     char next_char = *(it + 1);
-    if (std::isdigit(next_char)) return parse_number();
+    if (std::isdigit(next_char)) {
+      return parse_number();
+    }
+    break;
+  }
+  case '=': {
+    return this->parse_equal_sign();
   }
   default:
     break;
   }
-  return parse_symbol();
+  return this->parse_symbol();
+}
+
+token lexer::parse_equal_sign() {
+  const char *begin = m_input;
+  const char *it = m_input;
+  ++it;
+  switch (it[0]) {
+  case '>':
+    ++it;
+    m_input = it;
+    return token(token_t::arrow, begin, it);
+  default:
+    return this->parse_symbol();
+  }
 }
 
 token lexer::parse_symbol() {
@@ -228,8 +248,9 @@ end:
     t.type = token_t::is_char;
   } else if (t.as_string() == "eq?"_sv) {
     t.type = token_t::is_eq;
+  } else if (t.as_string() == "cond"_sv) {
+    t.type = token_t::cond;
   }
-
   return t;
 }
 

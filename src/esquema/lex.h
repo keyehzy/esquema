@@ -103,6 +103,7 @@ class lexer {
   token parse_symbol();
   token parse_single_char_token(token_t);
   token parse_string_literal();
+  token parse_equal_sign();
   void skip_whitespace();
   bool is_eof(const char*);
 
