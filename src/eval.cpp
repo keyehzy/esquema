@@ -7,7 +7,7 @@
 evaluator::evaluator(string_view input) : m_parser(parser(input)) {
   m_original_value = m_parser.parse_program();
   this->populate_env();
-  m_value = this->eval(m_original_value, m_toplevel_env);
+  m_value = this->eprogn(m_original_value, m_toplevel_env);
 };
 
 Expr evaluator::value() const { return m_value; }
