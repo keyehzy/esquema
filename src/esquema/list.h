@@ -46,7 +46,7 @@ class LinkedList {
     m_size += 1;
   }
 
-  Node<T, U>* get(int index) {
+  Node<T, U>* get(int index) const {
     ESQUEMA_ASSERT(index < m_size);
     auto* it = m_root;
     int pos = 0;
@@ -57,7 +57,7 @@ class LinkedList {
     return it;
   }
 
-  Node<T, U>* find(T key) {
+  Node<T, U>* find(const T& key) const {
     auto* it = m_root;
     while (it != nullptr && it->entry.key != key) {
       it = it->next;
@@ -65,7 +65,7 @@ class LinkedList {
     return it;
   }
 
-  Node<T, U>* find_last(T key) {
+  Node<T, U>* find_last(const T& key) const {
     auto* it = m_root;
     Node<T, U>* last = nullptr;
     while (it != nullptr) {

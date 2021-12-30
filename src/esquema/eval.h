@@ -10,21 +10,21 @@ class evaluator {
  public:
   explicit evaluator(string_view input);
   void populate_env();
-  Expr eval(Expr, Env&);
-  Expr eval_atom(Expr, Env&);
-  Expr eval_define(Expr, Env&);
-  Expr eval_let(Expr, Env&);
-  Expr eval_letrec(Expr, Env&);
-  Expr eval_syntactic_keyword(Expr, Env&);
-  Expr lookup_symbol(Expr, Env);
-  Expr eprogn(Expr, Env&);
-  Expr set(Atom, Expr, Env&);
+  Expr eval(const Expr&, Env&);
+  Expr eval_atom(const Expr&, Env&);
+  Expr eval_define(const Expr&, Env&);
+  Expr eval_let(const Expr&, Env&);
+  Expr eval_letrec(const Expr&, Env&);
+  Expr eval_syntactic_keyword(const Expr&, Env&);
+  Expr lookup_symbol(const Expr&, const Env&);
+  Expr eprogn(const Expr&, Env&);
+  Expr set(const Atom&, const Expr&, Env&);
   Expr value() const;
-  Expr invoke(Expr, List);
-  List eval_list(Expr, Env&);
-  Expr bind_variable(Expr, Expr, Env&);
-  Expr build_list(Expr, Env&);
-  Expr append_list(Expr, Expr, Env&);
+  Expr invoke(const Expr&, const List&);
+  List eval_list(const Expr&, Env&);
+  Expr bind_variable(const Expr&, const Expr&, Env&);
+  Expr build_list(const Expr&, Env&);
+  Expr append_list(const Expr&, const Expr&, Env&);
 
   bool is_at_top_level(const Env&);
   bool is_inside_lambda = false;

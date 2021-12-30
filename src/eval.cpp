@@ -12,7 +12,7 @@ evaluator::evaluator(string_view input) : m_parser(parser(input)) {
 
 Expr evaluator::value() const { return m_value; }
 
-Expr evaluator::eval(Expr exp, Env& env) {
+Expr evaluator::eval(const Expr& exp, Env& env) {
   switch (exp.kind()) {
   case Expr_kind::atom:
     return this->eval_atom(exp, env);
@@ -42,7 +42,7 @@ Expr evaluator::eval(Expr exp, Env& env) {
   ESQUEMA_NOT_REACHED();
 }
 
-Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
+Expr evaluator::eval_syntactic_keyword(const Expr& exp, Env& env) {
   switch (CAR(exp).atom().type()) {
   case token_t::car:
     ESQUEMA_ASSERT(CDR(exp).kind() == Expr_kind::cons);
@@ -144,7 +144,7 @@ Expr evaluator::eval_syntactic_keyword(Expr exp, Env& env) {
   ESQUEMA_NOT_REACHED();
 }
 
-Expr evaluator::eval_letrec(Expr exp, Env& env) {
+Expr evaluator::eval_letrec(const Expr& exp, Env& env) {
   bool was_already_inside_lambda = is_inside_lambda;
   is_inside_lambda = true;
 
@@ -180,7 +180,7 @@ Expr evaluator::eval_letrec(Expr exp, Env& env) {
   return result;
 }
 
-Expr evaluator::eval_let(Expr exp, Env& env) {
+Expr evaluator::eval_let(const Expr& exp, Env& env) {
   bool was_already_inside_lambda = is_inside_lambda;
   is_inside_lambda = true;
 
@@ -210,14 +210,14 @@ Expr evaluator::eval_let(Expr exp, Env& env) {
     ls2
     (cons (car ls1) (append (cdr ls1) ls2)))))
 */
-Expr evaluator::append_list(Expr list1, Expr list2, Env& env) {
+Expr evaluator::append_list(const Expr& list1, const Expr& list2, Env& env) {
   if (list1.kind() == Expr_kind::nil) {
     return this->eval(list2, env);
   }
   return Cons::expr(CAR(list1), this->append_list(CDR(list1), list2, env));
 }
 
-Expr evaluator::build_list(Expr exp, Env& env) {
+Expr evaluator::build_list(const Expr& exp, Env& env) {
   if (exp.kind() == Expr_kind::nil) {
     return exp;
   }
@@ -226,7 +226,7 @@ Expr evaluator::build_list(Expr exp, Env& env) {
 
 // See sec. 2.4
 // https://www.gnu.org/software/mit-scheme/documentation/stable/mit-scheme-ref.pdf
-Expr evaluator::eval_define(Expr exp, Env& env) {
+Expr evaluator::eval_define(const Expr& exp, Env& env) {
   ESQUEMA_ASSERT(is_at_top_level(env) || is_inside_lambda);
   if (CADR(exp).kind() == Expr_kind::cons) {
     Expr variable = CAADR(exp), params = CDADR(exp), body = CDDR(exp);
@@ -247,7 +247,7 @@ Expr evaluator::eval_define(Expr exp, Env& env) {
   }
 }
 
-List evaluator::eval_list(Expr exp, Env& env) {
+List evaluator::eval_list(const Expr& exp, Env& env) {
   Expr head = exp;
   List list;
   while (head.kind() == Expr_kind::cons) {
@@ -258,7 +258,7 @@ List evaluator::eval_list(Expr exp, Env& env) {
   return list;
 }
 
-Expr evaluator::invoke(Expr fn_exp, List args) {
+Expr evaluator::invoke(const Expr& fn_exp, const List& args) {
   if (fn_exp.kind() != Expr_kind::procedure) {
     ESQUEMA_ERROR("An expression of kind 'procedure' was expected.");
     return Expr::err();
@@ -289,7 +289,7 @@ Expr evaluator::invoke(Expr fn_exp, List args) {
   ESQUEMA_NOT_REACHED();
 }
 
-Expr evaluator::eprogn(Expr exp, Env& env) {
+Expr evaluator::eprogn(const Expr& exp, Env& env) {
   Expr head = exp;
   Expr val = head;
   while (head.kind() == Expr_kind::cons) {
@@ -303,7 +303,7 @@ Expr evaluator::eprogn(Expr exp, Env& env) {
   return val;
 }
 
-Expr evaluator::eval_atom(Expr exp, Env& env) {
+Expr evaluator::eval_atom(const Expr& exp, Env& env) {
   switch (exp.atom().token_().type) {
   case token_t::character:  // TODO: maybe we can evaluate these here?
   case token_t::float_:
@@ -320,7 +320,7 @@ Expr evaluator::eval_atom(Expr exp, Env& env) {
   }
 }
 
-Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
+Expr evaluator::set(const Atom& symbol, const Expr& new_val, Env& env) {
   // Section (2.5) MIT-Scheme Reference:
 
   // 1) If expression is specified, evaluates expression and stores the
@@ -347,7 +347,7 @@ Expr evaluator::set(Atom symbol, Expr new_val, Env& env) {
   return Expr::err();  // set! on an unbound variable
 }
 
-Expr evaluator::lookup_symbol(Expr symbol, Env env) {
+Expr evaluator::lookup_symbol(const Expr& symbol, const Env& env) {
   auto* node = m_protected_env.find_last(symbol.atom());
   if (node != nullptr) {
     return node->entry.value;
@@ -389,7 +389,7 @@ void evaluator::populate_env() {
 }
 
 // TODO: We need to differentiate between nothing and nil
-Expr evaluator::bind_variable(Expr symbol, Expr value, Env& env) {
+Expr evaluator::bind_variable(const Expr& symbol, const Expr& value, Env& env) {
   env.add(symbol.atom(), value);
 
   if (value.kind() == Expr_kind::nil) {
