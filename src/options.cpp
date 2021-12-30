@@ -52,6 +52,13 @@ option argparse::parse_current_option() {
       return filepath;
     }
 
+    if (longname == "eval") {
+      this->skip();
+      option o{.type = option_type::eval, .arg = this->peek()};
+      this->index_ += 1;
+      return o;
+    }
+
     if (longname == "compile") {
       this->skip();
       option o{.type = option_type::compile, .arg = ""_sv};
@@ -69,6 +76,13 @@ option argparse::parse_current_option() {
       option filepath = this->parse_file_path();
       this->index_ += 1;
       return filepath;
+    }
+
+    case 'e': {
+      this->skip();
+      option o{.type = option_type::eval, .arg = this->peek()};
+      this->index_ += 1;
+      return o;
     }
 
     case 'c': {

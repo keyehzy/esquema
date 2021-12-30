@@ -25,6 +25,13 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case option_type::eval: {
+      string_view input = o.arg;
+      printer p(input);
+      std::cout << p.print() << std::endl;
+      break;
+    }
+
     case option_type::repl: {
       char* buffer;
       while ((buffer = readline("esquema> ")) != NULL) {

@@ -81,6 +81,7 @@
 enum class option_type {
   _invalid,
   file,
+  eval,
   repl,
   compile,
 };
