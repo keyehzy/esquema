@@ -102,6 +102,16 @@ Expr evaluator::eval_syntactic_keyword(const Expr& exp, Env& env) {
                 e.atom().type() == token_t::character);
   }
 
+  case token_t::is_eq: {
+    Expr lhs = this->eval(CADR(exp), env), rhs = this->eval(CADDR(exp), env);
+
+    if (lhs.kind() != rhs.kind()) {
+      return Expr(false);
+    }
+
+    return Expr(this->equal(lhs, rhs));
+  }
+
   case token_t::if_:
     if (eval(CADR(exp), env).atom().type() != token_t::false_) {
       return eval(CADDR(exp), env);
@@ -142,6 +152,20 @@ Expr evaluator::eval_syntactic_keyword(const Expr& exp, Env& env) {
     return this->invoke(eval(CAR(exp), env), this->eval_list(CDR(exp), env));
   }
   ESQUEMA_NOT_REACHED();
+}
+
+bool evaluator::equal(const Expr& e1, const Expr& e2) {
+  switch (e1.kind()) {
+  case Expr_kind::character:
+  case Expr_kind::atom:
+    return e1.atom() == e2.atom();
+  case Expr_kind::nil:
+    return true;
+  case Expr_kind::cons:
+    return this->equal(CAR(e1), CAR(e2)) && this->equal(CDR(e1), CDR(e2));
+  default:
+    ESQUEMA_ERROR("Cannot compare\n");
+  }
 }
 
 Expr evaluator::eval_letrec(const Expr& exp, Env& env) {

@@ -50,6 +50,7 @@ Expr parser::parse_head() {
   case token_t::eof:
     return Expr::nil();
 
+  case token_t::is_eq:
   case token_t::is_boolean:
   case token_t::is_null:
   case token_t::is_pair:

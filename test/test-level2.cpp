@@ -312,5 +312,16 @@ TEST(test, predicates) {
     EXPECT_EQ(pprint("(char? '())"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(char? '(foo bar))"_sv), "#f"_sv);
     EXPECT_EQ(pprint("(char? +)"_sv), "#f"_sv);
+
+    EXPECT_EQ(pprint("(eq? 1 1)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(eq? 1 2)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(eq? 1 1.0)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(eq? 1 2.5)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(eq? #\a #\a)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(eq? #\a #\b)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(eq? '() '())"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(eq? '() foo)"_sv), "#f"_sv);
+    EXPECT_EQ(pprint("(eq? foo foo)"_sv), "#t"_sv);
+    EXPECT_EQ(pprint("(eq? foo bar)"_sv), "#f"_sv);
   }
 }

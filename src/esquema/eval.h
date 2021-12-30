@@ -23,6 +23,7 @@ class evaluator {
   Expr bind_variable(const Expr&, const Expr&, Env&);
   Expr build_list(const Expr&, Env&);
   Expr append_list(const Expr&, const Expr&, Env&);
+  bool equal(const Expr&, const Expr&);
 
   bool is_at_top_level(const Env&);
   bool is_inside_lambda = false;

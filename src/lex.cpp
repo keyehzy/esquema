@@ -226,6 +226,8 @@ end:
     t.type = token_t::is_string;
   } else if (t.as_string() == "char?"_sv) {
     t.type = token_t::is_char;
+  } else if (t.as_string() == "eq?"_sv) {
+    t.type = token_t::is_eq;
   }
 
   return t;

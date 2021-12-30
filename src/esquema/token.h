@@ -27,6 +27,7 @@ enum class token_t {
   is_port,  // TODO
   is_string,
   is_vector,  // TODO
+  is_eq,
 
   begin,
   define,
